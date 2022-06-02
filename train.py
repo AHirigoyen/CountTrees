@@ -49,7 +49,7 @@ class Training:
         
     def train(self, epochs: int=10, batch_size: int=8, split: float=0.2): 
         self.train_file, self.validation_file = self.__split_dataset(split) 
-
+        self.evaluate("results_pre_training.csv")
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config['batch_size'] = batch_size
@@ -69,9 +69,9 @@ class Training:
         ouput_model_name = "{}/checkpoint.pl".format(self.ouput_dir)
         torch.save(self.model.model.state_dict(), ouput_model_name)
 
-    def evaluate(self,):
+    def evaluate(self, _file='results.csv'):
         results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = 0.4)
-        results["results"].to_csv(os.path.join(self.ouput_dir, 'results.csv'))
+        results["results"].to_csv(os.path.join(self.ouput_dir, _file))
         print(results['box_precision'])
         print(results["box_recall"])
         print(results["class_recall"])
