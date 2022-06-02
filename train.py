@@ -57,11 +57,10 @@ class Training:
 
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = True
-        self.model.config['gpus'] = '-1'
+        self.model.config['gpus'] = -1
         
         self.model.create_trainer()
         self.model.use_release()
-        self.model.to('cuda')
         self.model.config
         self.model.trainer.fit(self.model)
 
