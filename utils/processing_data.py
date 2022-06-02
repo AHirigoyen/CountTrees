@@ -125,6 +125,6 @@ if __name__ == "__main__":
     if input_dirname: 
         process_data(input_dirname, out_dirname)
     elif input_raster: 
-        ProcessImages.processImage(input_raster, ouput_raster)
+        ProcessImages.process_image(input_raster, ouput_raster)
 
     
