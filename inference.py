@@ -55,7 +55,6 @@ class Inference:
                                    savedir=self.save_dir_pred_img)
 
 
-
 if __name__ == "__main__":
     args = docopt(__doc__)
     path_model = args['<model>']

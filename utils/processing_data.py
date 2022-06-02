@@ -94,7 +94,7 @@ class ProcessLabels:
 
 
 def process_data(intput_dirname: str, output_dirname: str) -> None:
-    """Transform raster data and labels from Arcgis Pro to Deepforest 
+    """Transform raster data and labels from Arcgis Pro to Deepforest
     format.
     """
     process_images = ProcessImages(output_dirname)
@@ -113,10 +113,9 @@ def process_data(intput_dirname: str, output_dirname: str) -> None:
         process_labels(name_label)
 
 
-
 if __name__ == "__main__":
     args = docopt(__doc__)
-    
+
     input_dirname = args['--input_dir']
     out_dirname = args['--output_dir']
 

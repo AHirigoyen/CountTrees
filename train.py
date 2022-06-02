@@ -24,6 +24,7 @@ class Training:
         self.input_dir_dataset = input_dir_dataset
         self.ouput_dir = ouput_dir
         self.model = main.deepforest()
+        self.train_file, self.validation_file = None, None
         os.makedirs(self.ouput_dir, exist_ok = True)
 
     def __split_dataset(self, split: float) -> Tuple[str, str]:
@@ -46,9 +47,7 @@ class Training:
         else:
             return path_csv, path_csv
         
-
-    def train(self, epochs: int=10, batch_size: int=8, split: float=0.2):
-        
+    def train(self, epochs: int=10, batch_size: int=8, split: float=0.2): 
         self.train_file, self.validation_file = self.__split_dataset(split) 
 
         self.model.config["train"]["epochs"] = epochs
@@ -66,21 +65,18 @@ class Training:
         self.model.config
         self.model.trainer.fit(self.model)
 
-
     def save(self,):
         ouput_model_name = "{}/checkpoint.pl".format(self.ouput_dir)
-        torch.save(self.model.model.state_dict(),ouput_model_name)
-
+        torch.save(self.model.model.state_dict(), ouput_model_name)
 
     def evaluate(self,):
         results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = 0.4)
-        results["results"].to_csv(os.path.join(self.ouput_dir,'results.csv'))
+        results["results"].to_csv(os.path.join(self.ouput_dir, 'results.csv'))
         print(results['box_precision'])
         print(results["box_recall"])
         print(results["class_recall"])
         print(results["results"])
         
-
 
 if __name__ == "__main__":
     args = docopt(__doc__)
