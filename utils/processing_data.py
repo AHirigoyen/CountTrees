@@ -22,7 +22,7 @@ from glob import glob
 from docopt import docopt
 from osgeo import gdal
 from tqdm import tqdm
-
+import numpy as np 
 
 class ProcessImages:
     """Process Images a save to directory.
@@ -33,30 +33,40 @@ class ProcessImages:
     def __call__(self, path_img: str) -> None:
         output_path_img = os.path.basename(path_img)
         output_path_img = os.path.join(self._output_dirname, output_path_img)
-        self.process_image(path_img, output_path_img)
+        return self.process_image(path_img, output_path_img)
 
     @staticmethod
-    def process_image(path_img: str, output_path_img: str) -> None:
+    def process_image(path_img: str, output_path_img: str) -> bool:
         """ Generate new raster data with datatype uint8 from raster data
         with datatype float32.
         """
+        if os.path.exists(output_path_img):
+            return True 
         # Opening raster from disk
         raster_data = gdal.Open(path_img)
 
         # Calculate the mininimun and maximun to Scale bands between 0 and 255
         maxs,mins = [],[]
+        seudo_uniques = []
         for i in range(3):
             srcband = raster_data.GetRasterBand(i+1)
-            srcband.ComputeStatistics(0)
-            mins.append(srcband.GetMinimum())
-            maxs.append(srcband.GetMaximum())
+            stats = srcband.ComputeStatistics(0)
+            _min,_max,mean, _ = stats
+            mins.append(_min)
+            maxs.append(_max)
+            hist = np.array(srcband.GetHistogram(_min,_max,1000))
+            seudo_uniques.append(sum(hist != 0 ))
         _min = min(mins)
         _max = max(maxs)
+        seudo_uniques = np.array(seudo_uniques)
+        if any(seudo_uniques < 10):
+            return False 
 
         # Generating new raster data after resclaing
         gdal.Translate(output_path_img, raster_data,
                         scaleParams = [[_min,_max,0,255]],
                         outputType = gdal.GDT_Byte)
+        return True 
 
 
 class ProcessLabels:
@@ -97,20 +107,21 @@ def process_data(intput_dirname: str, output_dirname: str) -> None:
     """Transform raster data and labels from Arcgis Pro to Deepforest
     format.
     """
+    os.makedirs(output_dirname, exist_ok = True)
+
     process_images = ProcessImages(output_dirname)
     process_labels = ProcessLabels(output_dirname)
 
     dir_images = os.path.join(intput_dirname, 'images')
     dir_labels = os.path.join(intput_dirname, 'labels')
 
-    os.makedirs(output_dirname, exist_ok = True)
-
     list_images = glob(os.path.join(dir_images, '*tif'))
     for path_image in tqdm(list_images):
-        process_images(path_image)
-        name_label = os.path.basename(path_image).replace('tif', 'txt')
-        name_label = os.path.join(dir_labels, name_label)
-        process_labels(name_label)
+        success = process_images(path_image)
+        if success:
+            name_label = os.path.basename(path_image).replace('tif', 'txt')
+            name_label = os.path.join(dir_labels, name_label)
+            process_labels(name_label)
 
 
 if __name__ == "__main__":
