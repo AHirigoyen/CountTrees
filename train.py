@@ -71,9 +71,10 @@ class Training:
     def evaluate(self, _file='results.csv'):
         results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = 0.4)
         results["results"].to_csv(os.path.join(self.ouput_dir, _file))
-        print(results['box_precision'])
-        print(results["box_recall"])
-        print(results["class_recall"])
+        print(f"Box precision {results['box_precision']}")
+        print(f"Box Recall {results['box_recall']}")
+        print(f"Class Recall {results['class_recall']}")
+        print("Results")
         print(results["results"])
         
 
