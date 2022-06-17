@@ -64,8 +64,9 @@ class ProcessImages:
 
         # Generating new raster data after resclaing
         gdal.Translate(output_path_img, raster_data,
-                        scaleParams = [[_min,_max,0,255]],
-                        outputType = gdal.GDT_Byte)
+                        scaleParams = [[_min,_max,0,254]],
+                        outputType = gdal.GDT_Byte,
+                        noData = 255)
         return True 
 
 
