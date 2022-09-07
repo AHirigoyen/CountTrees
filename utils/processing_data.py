@@ -117,7 +117,9 @@ def process_data(intput_dirname: str, output_dirname: str) -> None:
     dir_labels = os.path.join(intput_dirname, 'labels')
 
     list_images = glob(os.path.join(dir_images, '*tif'))
-    for path_image in tqdm(list_images):
+    list_images = tqdm(list_images)
+    for path_image in list_images:
+        list_images.set_postfix({'image ':os.path.split(path_image)[-1]})
         success = process_images(path_image)
         if success:
             name_label = os.path.basename(path_image).replace('tif', 'txt')
