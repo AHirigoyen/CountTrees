@@ -1,65 +1,95 @@
-"""Perform inference over raster data with datatype uint8 using trained model.
-
+"""
 Usage:
-    inference.py <model> <img> <outdir>
+    train.py --input_dir FOLDER --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --device DEVICE]
+
+Options:
+    --input_dir FOLDER          Folder with the dataset in format of Deepforest.
+    --output_dir FOLDER         Folder to save ouput data (model and evaluation results).
+    --epochs EPOCHS             Number of epochs to train [default: 10]
+    --batch_size BATCH_SIZE     Size of batch_size [default: 8]
+    --split SPLIT               Percentage of split [default: 0.2]
 """
 import os
+from typing import Tuple
 
+import numpy as np
 import pandas as pd
 import torch
 from deepforest import main
-from deepforest.visualize import plot_prediction_dataframe
 from docopt import docopt
 
-from utils.processing_data import ProcessImages
+from pytorch_lightning import Trainer
 
 
-class Inference:
-    """Perform inference over raster data with datatype uint8
-    """
-    def __init__(self, path_model: str, out_dirname: str) -> None:
-        self.model = self.load_model(path_model)
-        self.save_dir_img = out_dirname
-        self.save_dir_pred_img = os.path.join(out_dirname,'predictions')
-        self.results_df = None
+class Training:
+    def __init__(self, input_dir_dataset: str, ouput_dir: str) -> None:
+        self.input_dir_dataset = input_dir_dataset
+        self.ouput_dir = ouput_dir
+        self.model = main.deepforest()
+        self.train_file, self.validation_file = None, None
+        os.makedirs(self.ouput_dir, exist_ok = True)
 
-        os.makedirs(self.save_dir_img, exist_ok = True)
-        os.makedirs(self.save_dir_pred_img, exist_ok = True)
+    def __split_dataset(self, split: float) -> Tuple[str, str]:
+        path_csv = os.path.join(self.input_dir_dataset, 'annotations.csv')
+        if split:
+            train_annotations = pd.read_csv(path_csv)
+            image_paths = train_annotations.image_path.unique()
+            np.random.seed(42)
+            valid_paths = np.random.choice(image_paths, int(len(image_paths)*split))
+            valid_annotations = train_annotations.loc[train_annotations.image_path.isin(valid_paths)]
+            train_annotations = train_annotations.loc[~train_annotations.image_path.isin(valid_paths)]
+            
+            train_file= os.path.join(self.input_dir_dataset, "train.csv")
+            validation_file= os.path.join(self.input_dir_dataset, "valid.csv")
+            
+            train_annotations.to_csv(train_file, index=False)
+            valid_annotations.to_csv(validation_file, index=False)
 
-    def __call__(self, path_img: str) -> None:
-        new_path_img = os.path.basename(path_img)
-        new_path_img = os.path.join(self.save_dir_img, new_path_img)
-        ProcessImages.process_image(path_img, new_path_img)
+            return train_file,validation_file
+        else:
+            return path_csv, path_csv
+        
+    def train(self, epochs: int=10, batch_size: int=8, split: float=0.2): 
+        self.train_file, self.validation_file = self.__split_dataset(split) 
+        self.evaluate("results_pre_training.csv")
+        self.model.config["train"]["epochs"] = epochs
+        self.model.config["train"]["csv_file"] = self.train_file
+        self.model.config['batch_size'] = batch_size
+        self.model.config["train"]["root_dir"] = self.input_dir_dataset
 
-        dataframe = self.model.predict_tile(new_path_img, return_plot=False, 
-                                patch_size=400, patch_overlap=0.25)
-        dataframe['image_path'] = os.path.basename(path_img)
+        self.model.config["save-snapshot"] = False
+        self.model.config["train"]["preload_images"] = True
+    
+        self.model.trainer = Trainer(accelerator='auto',
+                            strategy="ddp",
+                            enable_checkpointing=False,
+                            max_epochs=self.model.config["train"]["epochs"],
+                            )
+        self.model.trainer.fit(self.model)
 
-        if not self.results_df:
-            self.results_df = os.path.join(self.save_dir_img, 'results.csv')
-            dataframe.to_csv(self.results_df, index_label='id')
-        else: 
-            dataframe.to_csv(self.results_df, mode='a', header=False)
+    def save(self,):
+        ouput_model_name = "{}/checkpoint.pl".format(self.ouput_dir)
+        torch.save(self.model.model.state_dict(), ouput_model_name)
 
-    @staticmethod
-    def load_model(path_model: str) -> None:
-        model = main.deepforest()
-        model.model.load_state_dict(torch.load(path_model))
-        return model 
-
-    def plot_prediction(self,) -> None:
-        import PIL.Image
-        PIL.Image.MAX_IMAGE_PIXELS = None
-        df = pd.read_csv(self.results_df)
-        plot_prediction_dataframe(df, root_dir=self.save_dir_img, 
-                                   savedir=self.save_dir_pred_img)
-
+    def evaluate(self, _file='results.csv'):
+        results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = 0.4)
+        results["results"].to_csv(os.path.join(self.ouput_dir, _file))
+        print(f"Box precision {results['box_precision']}")
+        print(f"Box Recall {results['box_recall']}")
+        print(f"Class Recall {results['class_recall']}")
+        print("Results")
+        print(results["results"])
+        
 
 if __name__ == "__main__":
     args = docopt(__doc__)
-    path_model = args['<model>']
-    path_img = args['<img>']
-    out_dirname = args['<outdir>']
-    inference = Inference(path_model, out_dirname)
-    inference(path_img)
-    inference.plot_prediction()
+    input_dirname = args['--input_dir']
+    out_dirname = args['--output_dir']
+    epochs = int(args['--epochs'])
+    bath_size = int(args['--batch_size'])
+    split = float(args['--split'])
+
+    training = Training(input_dirname, out_dirname)
+    training.train(epochs=epochs, batch_size=bath_size, split=split)
+    training.save()
+    training.evaluate()

@@ -1,6 +1,6 @@
 """
 Usage:
-    train.py --input_dir FOLDER --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT]
+    train.py --input_dir FOLDER --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --gpu BOOL]
 
 Options:
     --input_dir FOLDER          Folder with the dataset in format of Deepforest.
@@ -8,6 +8,7 @@ Options:
     --epochs EPOCHS             Number of epochs to train [default: 10]
     --batch_size BATCH_SIZE     Size of batch_size [default: 8]
     --split SPLIT               Percentage of split [default: 0.2]
+    --gpu BOOL                  Use or no GPU [default: True]
 """
 import os
 from typing import Tuple
@@ -47,7 +48,8 @@ class Training:
         else:
             return path_csv, path_csv
         
-    def train(self, epochs: int=10, batch_size: int=8, split: float=0.2): 
+    def train(self, epochs: int=10, batch_size: int=8, split: float=0.2,
+                gpu=-1): 
         self.train_file, self.validation_file = self.__split_dataset(split) 
         self.evaluate("results_pre_training.csv")
         self.model.config["train"]["epochs"] = epochs
@@ -57,7 +59,7 @@ class Training:
 
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = True
-        self.model.config['gpus'] = -1
+        self.model.config['gpus'] = gpu
         
         self.model.create_trainer()
         self.model.use_release()
@@ -85,6 +87,7 @@ if __name__ == "__main__":
     epochs = int(args['--epochs'])
     bath_size = int(args['--batch_size'])
     split = float(args['--split'])
+    gpu = -1 if  args['--gpu'] == 'True' else None 
 
     training = Training(input_dirname, out_dirname)
     training.train(epochs=epochs, batch_size=bath_size, split=split)
