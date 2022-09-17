@@ -72,6 +72,7 @@ class Training:
         torch.save(self.model.model.state_dict(), ouput_model_name)
 
     def evaluate(self, _file='results.csv'):
+        print('Evaluating...')
         results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = 0.4)
         results["results"].to_csv(os.path.join(self.ouput_dir, _file))
         print(f"Box precision {results['box_precision']}")
