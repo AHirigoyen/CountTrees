@@ -66,7 +66,8 @@ class ProcessImages:
         gdal.Translate(output_path_img, raster_data,
                         scaleParams = [[_min,_max,0,254]],
                         outputType = gdal.GDT_Byte,
-                        noData = 255)
+                        noData = 255,
+                        bandList = [1,2,3])
         return True 
 
 
