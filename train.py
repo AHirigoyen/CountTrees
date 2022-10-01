@@ -11,7 +11,6 @@ Options:
     --checkpoint PATH           Path to checkpoint to continue training
 """
 import os
-from datetime import datetime
 from typing import Tuple
 
 import numpy as np
@@ -20,17 +19,11 @@ import torch
 from deepforest import main
 from docopt import docopt
 from pytorch_lightning import Trainer
-from pytz import timezone, utc
-
 
 class Training:
     def __init__(self, input_dir_dataset: str, 
                         ouput_dir: str,
                         checkpoint: str = None) -> None:
-
-        self.date= datetime.now(utc)
-        self.date = date.astimezone(timezone('America/Montevideo'))
-        self.date = date.strftime("%Y_%m_%d_%H_%M_%S")
         self.input_dir_dataset = input_dir_dataset
         self.ouput_dir = ouput_dir
         self.model = main.deepforest()
@@ -64,7 +57,7 @@ class Training:
         
     def train(self, epochs: int=10, batch_size: int=8, split: float=0.2): 
         self.train_file, self.validation_file = self.__split_dataset(split) 
-        self.evaluate(f"results_pre_training.csv")
+        self.evaluate("results_pre_training.csv")
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config['batch_size'] = batch_size
@@ -78,15 +71,15 @@ class Training:
                                       strategy="ddp",
                                       enable_checkpointing=False,
                                       max_epochs=self.model.config["train"]["epochs"],
+                                      default_root_dir=self.ouput_dir
                                     )
         self.model.trainer.fit(self.model)
 
     def save(self,):
-        ouput_model_name = f"{self.ouput_dir}/checkpoint_{self.date}.pl"
+        ouput_model_name = "{}/checkpoint.pl".format(self.ouput_dir)
         torch.save(self.model.model.state_dict(), ouput_model_name)
 
     def evaluate(self, _file='results.csv'):
-        _file = _file.replace('.', f'{self.date}.')
         print('Evaluating...')
         results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = 0.4)
         results["results"].to_csv(os.path.join(self.ouput_dir, _file))
