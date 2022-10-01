@@ -1,6 +1,6 @@
 """
 Usage:
-    train.py --input_dir FOLDER --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT]
+    train.py --input_dir FOLDER --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpont PATH]
 
 Options:
     --input_dir FOLDER          Folder with the dataset in format of Deepforest.
@@ -8,6 +8,7 @@ Options:
     --epochs EPOCHS             Number of epochs to train [default: 10]
     --batch_size BATCH_SIZE     Size of batch_size [default: 8]
     --split SPLIT               Percentage of split [default: 0.2]
+    --checkpoint PATH           Path to checkpoint to continue training
 """
 import os
 from typing import Tuple
@@ -20,11 +21,17 @@ from docopt import docopt
 from pytorch_lightning import Trainer
 
 class Training:
-    def __init__(self, input_dir_dataset: str, ouput_dir: str) -> None:
+    def __init__(self, input_dir_dataset: str, 
+                        ouput_dir: str,
+                        checkpoint: str = None) -> None:
         self.input_dir_dataset = input_dir_dataset
         self.ouput_dir = ouput_dir
         self.model = main.deepforest()
-        self.model.use_release()
+
+        if checkpoint:
+            self.model.model.load_state_dict(torch.load(checkpoint))
+        else:
+            self.model.use_release()
         self.train_file, self.validation_file = None, None
         os.makedirs(self.ouput_dir, exist_ok = True)
 
@@ -89,8 +96,9 @@ if __name__ == "__main__":
     epochs = int(args['--epochs'])
     bath_size = int(args['--batch_size'])
     split = float(args['--split'])
+    checkpoint = args['--checkpoint']
    
-    training = Training(input_dirname, out_dirname)
+    training = Training(input_dirname, out_dirname, checkpoint)
     training.train(epochs=epochs, batch_size=bath_size, split=split)
     training.save()
     training.evaluate()
