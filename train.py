@@ -1,6 +1,6 @@
 """
 Usage:
-    train.py --input_dir FOLDER --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpont PATH]
+    train.py --input_dir FOLDER --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH]
 
 Options:
     --input_dir FOLDER          Folder with the dataset in format of Deepforest.
