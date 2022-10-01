@@ -82,8 +82,8 @@ class ProcessLabels:
             file_csv.write(",".join(columns))
             file_csv.write("\n")
 
-    def __call__(self, path_annotation: str) -> None:
-        image_path =  os.path.basename(path_annotation).replace('txt', 'tif')
+    def __call__(self, path_annotation: str, image_path: str) -> None:
+        
         data = []
 
         with open(path_annotation, "r") as file_annotation:
@@ -108,6 +108,9 @@ class ProcessLabels:
 def process_data(intput_dirname: str, output_dirname: str) -> None:
     """Transform raster data and labels from Arcgis Pro to Deepforest
     format.
+
+    Splitted the folders
+    https://github.com/googlecolab/colabtools/issues/382#issuecomment-455895825
     """
     os.makedirs(output_dirname, exist_ok = True)
 
@@ -117,15 +120,25 @@ def process_data(intput_dirname: str, output_dirname: str) -> None:
     dir_images = os.path.join(intput_dirname, 'images')
     dir_labels = os.path.join(intput_dirname, 'labels')
 
-    list_images = glob(os.path.join(dir_images, '*tif'))
+    print('fetching files')
+    for i in tqdm(range(10)): #fecth files, google drive 
+        list_images = glob(os.path.join(dir_images, '*tif'))
+
     list_images = tqdm(list_images)
-    for path_image in list_images:
+    for i, path_image in enumerate(list_images):
+        if  i%50==0:
+            sub_name = str(i).zfill(6)
+            sub_dirname = os.path.join(output_dirname, sub_name)
+            os.makedirs(sub_dirname, exist_ok = True)
+            process_images._output_dirname = sub_dirname
+
         list_images.set_postfix({'image ':os.path.split(path_image)[-1]})
         success = process_images(path_image)
         if success:
             name_label = os.path.basename(path_image).replace('tif', 'txt')
             name_label = os.path.join(dir_labels, name_label)
-            process_labels(name_label)
+            path_image = os.path.join(sub_name, os.path.basename(path_image))
+            process_labels(name_label,path_image)
 
 
 if __name__ == "__main__":
@@ -141,5 +154,3 @@ if __name__ == "__main__":
         process_data(input_dirname, out_dirname)
     elif input_raster: 
         ProcessImages.process_image(input_raster, ouput_raster)
-
-    
