@@ -200,7 +200,7 @@ if __name__ == "__main__":
     input_raster = args['--input_raster']
     ouput_raster = args['--output_raster']
 
-    if input_dirname: 
+    if input_zip: 
         process_data(input_zip, out_zip)
     elif input_raster: 
         ProcessImages.process_image(input_raster, ouput_raster)

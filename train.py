@@ -79,7 +79,7 @@ class Training:
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
 
         self.model.config["save-snapshot"] = False
-        self.model.config["train"]["preload_images"] = True
+        self.model.config["train"]["preload_images"] = False
         
         self.model.trainer =  Trainer(
                                       accelerator="auto",
