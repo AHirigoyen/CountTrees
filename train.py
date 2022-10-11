@@ -1,9 +1,9 @@
 """
 Usage:
-    train.py --input_dir FOLDER --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH]
+    train.py --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH]
 
 Options:
-    --input_dir FOLDER          Folder with the dataset in format of Deepforest.
+    --input_zip ZIP_FILE        Folder with the dataset in format of Deepforest.
     --output_dir FOLDER         Folder to save ouput data (model and evaluation results).
     --epochs EPOCHS             Number of epochs to train [default: 10]
     --batch_size BATCH_SIZE     Size of batch_size [default: 8]
@@ -19,11 +19,26 @@ import torch
 from deepforest import main
 from docopt import docopt
 from pytorch_lightning import Trainer
+import tempfile
+
+from utils.processing_data import unzip
 
 class Training:
-    def __init__(self, input_dir_dataset: str, 
+    def __init__(self, input_zip: str, 
                         ouput_dir: str,
                         checkpoint: str = None) -> None:
+
+        self.input_zip = input_zip
+        temdir = tempfile.gettempdir()
+        input_dir_dataset = os.path.join(temdir,'temp_input')
+        os.makedirs(input_dir_dataset, exist_ok = True)
+        print(f'unzip {input_zip} ...')
+        unzip(input_zip, input_dir_dataset)
+
+        list_dirs = os.listdir(input_dir_dataset)
+        if len(list_dirs) == 1:
+            input_dir_dataset = os.path.join(input_dir_dataset,list_dirs[0])
+        
         self.input_dir_dataset = input_dir_dataset
         self.ouput_dir = ouput_dir
         self.model = main.deepforest()
@@ -92,14 +107,14 @@ class Training:
 
 if __name__ == "__main__":
     args = docopt(__doc__)
-    input_dirname = args['--input_dir']
+    input_zip = args['--input_zip']
     out_dirname = args['--output_dir']
     epochs = int(args['--epochs'])
     bath_size = int(args['--batch_size'])
     split = float(args['--split'])
     checkpoint = args['--checkpoint']
    
-    training = Training(input_dirname, out_dirname, checkpoint)
+    training = Training(input_zip, out_dirname, checkpoint)
     training.train(epochs=epochs, batch_size=bath_size, split=split)
     training.save()
     training.evaluate()
