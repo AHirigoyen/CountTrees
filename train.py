@@ -83,7 +83,6 @@ class Training:
         
         self.model.trainer =  Trainer(
                                       accelerator="auto",
-                                      strategy="ddp",
                                       enable_checkpointing=False,
                                       max_epochs=self.model.config["train"]["epochs"],
                                       default_root_dir=self.ouput_dir
