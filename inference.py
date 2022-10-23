@@ -12,6 +12,7 @@ from deepforest.visualize import plot_prediction_dataframe
 from docopt import docopt
 
 from utils.processing_data import ProcessImages
+from utils.convert_csv_to_shape import project
 
 
 class Inference:
@@ -21,8 +22,9 @@ class Inference:
         self.model = self.load_model(path_model)
         self.save_dir_img = out_dirname
         self.save_dir_pred_img = os.path.join(out_dirname,'predictions')
-        self.results_df = None
-
+        self.results_df = os.path.join(self.save_dir_img, 'results.csv')
+        self.shape_dir =  os.path.join(self.save_dir_img, 'shape')
+    
         os.makedirs(self.save_dir_img, exist_ok = True)
         os.makedirs(self.save_dir_pred_img, exist_ok = True)
 
@@ -35,11 +37,12 @@ class Inference:
                                 patch_size=400, patch_overlap=0.25)
         dataframe['image_path'] = os.path.basename(path_img)
 
-        if not self.results_df:
-            self.results_df = os.path.join(self.save_dir_img, 'results.csv')
-            dataframe.to_csv(self.results_df, index_label='id')
-        else: 
-            dataframe.to_csv(self.results_df, mode='a', header=False)
+        self.results_df = os.path.join(self.save_dir_img, 'results.csv')
+        dataframe.to_csv(self.results_df, index_label='id')
+        boxes = project(path_img, dataframe)
+        boxes.to_file(self.shape_dir, driver='ESRI Shapefile')
+
+
 
     @staticmethod
     def load_model(path_model: str) -> None:
