@@ -1,7 +1,10 @@
 """Perform inference over raster data with datatype uint8 using trained model.
 
 Usage:
-    inference.py <model> <img> <outdir>
+    inference.py --patch_size P <model> <img> <outdir> 
+
+Options:
+    --patch_size P    Folder with the dataset in format of Deepforest [default: 400]
 """
 import os
 
@@ -28,13 +31,13 @@ class Inference:
         os.makedirs(self.save_dir_img, exist_ok = True)
         os.makedirs(self.save_dir_pred_img, exist_ok = True)
 
-    def __call__(self, path_img: str) -> None:
+    def __call__(self, path_img: str, patch_size: int = 400) -> None:
         new_path_img = os.path.basename(path_img)
         new_path_img = os.path.join(self.save_dir_img, new_path_img)
         ProcessImages.process_image(path_img, new_path_img)
 
         dataframe = self.model.predict_tile(new_path_img, return_plot=False, 
-                                patch_size=400, patch_overlap=0.25)
+                                patch_size=patch_size, patch_overlap=0.25)
         dataframe['image_path'] = os.path.basename(path_img)
 
         self.results_df = os.path.join(self.save_dir_img, 'results.csv')
@@ -63,6 +66,7 @@ if __name__ == "__main__":
     path_model = args['<model>']
     path_img = args['<img>']
     out_dirname = args['<outdir>']
+    patch_size = int(args['--patch_size'])
     inference = Inference(path_model, out_dirname)
-    inference(path_img)
+    inference(path_img,patch_size=patch_size)
     inference.plot_prediction()
