@@ -49,8 +49,12 @@ class Inference:
 
     @staticmethod
     def load_model(path_model: str) -> None:
+        if torch.cuda.is_available():
+            current_device = torch.device("cuda")
+        else:
+            current_device = torch.device("cpu")
         model = main.deepforest()
-        model.model.load_state_dict(torch.load(path_model))
+        model.model.load_state_dict(torch.load(path_model,map_location=current_device))
         return model 
 
     def plot_prediction(self,) -> None:
