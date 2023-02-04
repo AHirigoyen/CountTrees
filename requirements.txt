@@ -3,4 +3,4 @@ click==7.1.2
 opencv-python-headless==4.1.2.30
 albumentations
 docopt
-GDAL==2.2.2
+GDAL
