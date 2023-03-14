@@ -1,5 +1,5 @@
 DeepForest
-click==7.1.2
+click
 opencv-python-headless
 albumentations
 docopt
