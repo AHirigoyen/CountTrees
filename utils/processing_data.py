@@ -32,7 +32,7 @@ import zipfile
 import os 
 from tqdm import tqdm
 from glob import glob
-
+from .histo_equalizer import equalize_and_replace
 
 
 def filter_files(x):
@@ -90,11 +90,13 @@ class ProcessImages:
         for i in range(3):
             srcband = raster_data.GetRasterBand(i+1)
             stats = srcband.ComputeStatistics(0)
-            _min,_max,mean, _ = stats
+            _min, _max, mean, _ = stats
             mins.append(_min)
             maxs.append(_max)
-            hist = np.array(srcband.GetHistogram(_min,_max,1000))
+            hist = np.array(srcband.GetHistogram(_min, _max, 1000))
             seudo_uniques.append(sum(hist != 0 ))
+        
+        #print(mins, maxs)
         _min = min(mins)
         _max = max(maxs)
         seudo_uniques = np.array(seudo_uniques)
@@ -103,10 +105,12 @@ class ProcessImages:
 
         # Generating new raster data after resclaing
         gdal.Translate(output_path_img, raster_data,
-                        scaleParams = [[_min,_max,0,254]],
+                        scaleParams = [[_min, _max, 0, 254]],
                         outputType = gdal.GDT_Byte,
                         noData = 255,
                         bandList = [1,2,3])
+
+        equalize_and_replace(output_path_img)
         return True 
 
 

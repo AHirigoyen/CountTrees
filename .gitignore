@@ -1,3 +1,6 @@
+.venv*
 .env
 .vscode 
 Data
+*tif
+*tif*

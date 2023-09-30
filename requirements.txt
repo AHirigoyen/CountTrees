@@ -4,3 +4,4 @@ opencv-python-headless
 albumentations
 docopt
 GDAL
+tqdm
