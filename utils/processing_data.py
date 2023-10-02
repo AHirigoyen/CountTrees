@@ -32,7 +32,7 @@ import zipfile
 import os 
 from tqdm import tqdm
 from glob import glob
-from .histo_equalizer import equalize_and_replace
+from utils.histo_equalizer import equalize_and_replace
 
 
 def filter_files(x):
