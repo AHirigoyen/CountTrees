@@ -28,8 +28,10 @@ from utils.processing_data import unzip
 class Training:
     def __init__(self, input_zip: str, 
                         ouput_dir: str,
-                        checkpoint: str = None) -> None:
+                        checkpoint: str = None,
+                        split: float=0.2) -> None:
 
+        self.split = split
         self.input_zip = input_zip
         temdir = tempfile.gettempdir()
         input_dir_dataset = os.path.join(temdir,'temp_input')
@@ -49,7 +51,7 @@ class Training:
             self.model.model.load_state_dict(torch.load(checkpoint))
         else:
             self.model.use_release()
-        self.train_file, self.validation_file = None, None
+        self.train_file, self.validation_file = self.__split_dataset(self.split) 
         os.makedirs(self.ouput_dir, exist_ok = True)
 
     def __split_dataset(self, split: float) -> Tuple[str, str]:
@@ -72,8 +74,7 @@ class Training:
         else:
             return path_csv, path_csv
         
-    def train(self, epochs: int=10, batch_size: int=8, split: float=0.2): 
-        self.train_file, self.validation_file = self.__split_dataset(split) 
+    def train(self, epochs: int=10, batch_size: int=8): 
         #self.evaluate("results_pre_training.csv")
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
@@ -116,7 +117,7 @@ if __name__ == "__main__":
     split = float(args['--split'])
     checkpoint = args['--checkpoint']
    
-    training = Training(input_zip, out_dirname, checkpoint)
-    training.train(epochs=epochs, batch_size=bath_size, split=split)
+    training = Training(input_zip, out_dirname, checkpoint, split=split)
+    training.train(epochs=epochs, batch_size=bath_size)
     training.save()
     training.evaluate()
