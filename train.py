@@ -51,6 +51,7 @@ class Training:
             self.model.model.load_state_dict(torch.load(checkpoint))
         else:
             self.model.use_release()
+        self.model.to("cuda")
         self.train_file, self.validation_file = self.__split_dataset(self.split) 
         os.makedirs(self.ouput_dir, exist_ok = True)
 
