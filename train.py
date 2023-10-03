@@ -20,6 +20,8 @@ from deepforest import main
 from docopt import docopt
 from pytorch_lightning import Trainer
 import tempfile
+from datetime import datetime as dt
+
 
 from utils.processing_data import unzip
 
@@ -72,7 +74,7 @@ class Training:
         
     def train(self, epochs: int=10, batch_size: int=8, split: float=0.2): 
         self.train_file, self.validation_file = self.__split_dataset(split) 
-        self.evaluate("results_pre_training.csv")
+        #self.evaluate("results_pre_training.csv")
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config['batch_size'] = batch_size
@@ -90,7 +92,8 @@ class Training:
         self.model.trainer.fit(self.model)
 
     def save(self,):
-        ouput_model_name = "{}/checkpoint.pl".format(self.ouput_dir)
+        ouput_model_name = "{}/{}.pl".format(self.ouput_dir, 
+                            f"checkpoint_{dt.now():%Y_%m_%d_%H_%M_%S}")
         torch.save(self.model.model.state_dict(), ouput_model_name)
 
     def evaluate(self, _file='results.csv'):
