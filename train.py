@@ -10,6 +10,11 @@ Options:
     --split SPLIT               Percentage of split [default: 0.2]
     --checkpoint PATH           Path to checkpoint to continue training
 """
+import warnings
+
+# Filter out the specific RuntimeWarning
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="shapely.set_operations")
+
 import os
 from typing import Tuple
 
@@ -75,7 +80,7 @@ class Training:
         else:
             return path_csv, path_csv
         
-    def train(self, epochs: int=10, batch_size: int=8): 
+    def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', **kwargs): 
         #self.evaluate("results_pre_training.csv")
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
@@ -86,10 +91,11 @@ class Training:
         self.model.config["train"]["preload_images"] = False
         
         self.model.trainer =  Trainer(
-                                      accelerator="auto",
+                                      accelerator="accelerator",
                                       enable_checkpointing=False,
                                       max_epochs=self.model.config["train"]["epochs"],
-                                      default_root_dir=self.ouput_dir
+                                      default_root_dir=self.ouput_dir,
+                                      **kwargs,
                                     )
         self.model.trainer.fit(self.model)
 

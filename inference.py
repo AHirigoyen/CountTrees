@@ -6,6 +6,11 @@ Usage:
 Options:
     --patch_size P    Folder with the dataset in format of Deepforest [default: 400]
 """
+import warnings
+
+# Filter out the specific RuntimeWarning
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="shapely.set_operations")
+
 import os
 
 import pandas as pd
@@ -55,6 +60,7 @@ class Inference:
             current_device = torch.device("cpu")
         model = main.deepforest()
         model.model.load_state_dict(torch.load(path_model,map_location=current_device))
+        model.to("cuda")
         return model 
 
     def plot_prediction(self,) -> None:
