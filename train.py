@@ -91,7 +91,7 @@ class Training:
         self.model.config["train"]["preload_images"] = False
         
         self.model.trainer =  Trainer(
-                                      accelerator="accelerator",
+                                      accelerator=accelerator,
                                       enable_checkpointing=False,
                                       max_epochs=self.model.config["train"]["epochs"],
                                       default_root_dir=self.ouput_dir,
