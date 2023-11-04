@@ -1,7 +1,7 @@
 """Perform inference over raster data with datatype uint8 using trained model.
 
 Usage:
-    inference.py --patch_size P <model> <img> <outdir> 
+    inference --patch_size P <model> <img> <outdir> 
 
 Options:
     --patch_size P    Folder with the dataset in format of Deepforest [default: 400]
@@ -19,8 +19,8 @@ from deepforest import main
 from deepforest.visualize import plot_prediction_dataframe
 from docopt import docopt
 
-from utils.processing_data import ProcessImages
-from utils.convert_csv_to_shape import project
+from .utils.processing_data import ProcessImages
+from .utils.convert_csv_to_shape import project
 
 
 class Inference:
@@ -71,7 +71,9 @@ class Inference:
                                    savedir=self.save_dir_pred_img)
 
 
-if __name__ == "__main__":
+
+
+def main():
     args = docopt(__doc__)
     path_model = args['<model>']
     path_img = args['<img>']
@@ -80,3 +82,7 @@ if __name__ == "__main__":
     inference = Inference(path_model, out_dirname)
     inference(path_img,patch_size=patch_size)
     inference.plot_prediction()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,6 +1,6 @@
 """
 Usage:
-    train.py --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH]
+    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH]
 
 Options:
     --input_zip ZIP_FILE        Folder with the dataset in format of Deepforest.
@@ -115,7 +115,7 @@ class Training:
         print(results["results"])
         
 
-if __name__ == "__main__":
+def main():
     args = docopt(__doc__)
     input_zip = args['--input_zip']
     out_dirname = args['--output_dir']
@@ -128,3 +128,7 @@ if __name__ == "__main__":
     training.train(epochs=epochs, batch_size=bath_size)
     training.save()
     training.evaluate()
+
+
+if __name__ == "__main__":
+    main()
