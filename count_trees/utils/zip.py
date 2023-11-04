@@ -5,6 +5,13 @@ from pathlib import Path
 from glob import glob 
 
 
+def filter_files(x):
+    exclude_files = ['xml','tfw']
+    for exclue_file in exclude_files:
+        if exclue_file in x:
+            return False
+    return True 
+    
 def zip_folder(root_path,name_zip):
     base_diname = os.path.basename(root_path)
     dirname = os.path.dirname(root_path)

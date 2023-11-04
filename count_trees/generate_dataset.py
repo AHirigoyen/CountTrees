@@ -56,6 +56,8 @@ def main():
 
     df.to_csv(temp_csv, index=False)
 
+    output_folder = os.path.join(temdir, 'ouput_dir')
+
     annotations = split_raster(
             path_to_raster=output_raster,
             annotations_file=temp_csv,
@@ -65,7 +67,7 @@ def main():
             allow_empty=False
         )
     
-    zip_folder(root_path, output_zip)
+    zip_folder(output_folder, output_zip)
 
 
 if __name__ == "__main__":

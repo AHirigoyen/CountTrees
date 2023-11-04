@@ -36,14 +36,6 @@ from .histo_equalizer import equalize_and_replace
 from .zip import zip_folder, unzip
 
 
-def filter_files(x):
-    exclude_files = ['xml','tfw']
-    for exclue_file in exclude_files:
-        if exclue_file in x:
-            return False
-    return True 
-    
-
 class ProcessImages:
     """Process Images a save to directory.
     """
