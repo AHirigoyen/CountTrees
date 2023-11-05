@@ -21,7 +21,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import torch
-from deepforest import main
+from deepforest import main as main_model
 from docopt import docopt
 from pytorch_lightning import Trainer
 import tempfile
@@ -50,7 +50,7 @@ class Training:
         
         self.input_dir_dataset = input_dir_dataset
         self.ouput_dir = ouput_dir
-        self.model = main.deepforest()
+        self.model = main_model.deepforest()
 
         if checkpoint:
             self.model.model.load_state_dict(torch.load(checkpoint))
