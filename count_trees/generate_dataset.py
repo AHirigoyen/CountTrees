@@ -12,6 +12,9 @@ from deepforest.utilities import shapefile_to_annotations
 import tempfile
 import os 
 from .utils.zip import zip_folder
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def circle_to_square(circle):
@@ -37,13 +40,16 @@ def main():
     raster_path = args['<raster>']
     output_zip = args['<output_zip>']
 
-    temdir = tempfile.gettempdir()
+    logger.info('Processing shape')
+
+    temdir = tempfile.TemporaryDirectory().name
+    os.makedirs(temdir, exist_ok = True)
     output_shapefile = os.path.join(temdir, 'squares.shp')
 
     generate_squared_shapes(input_shapefile, output_shapefile)
 
 
-    output_raster = os.path.join(temdir, 'precessed.tif')
+    output_raster = os.path.join(temdir, 'annotations.tif')
     ProcessImages.process_image(raster_path, output_raster)
 
 
@@ -56,7 +62,9 @@ def main():
 
     df.to_csv(temp_csv, index=False)
 
-    output_folder = os.path.join(temdir, 'ouput_dir')
+    output_folder = os.path.join(temdir, 'output_dir')
+
+    logger.info('Generate annotations')
 
     annotations = split_raster(
             path_to_raster=output_raster,

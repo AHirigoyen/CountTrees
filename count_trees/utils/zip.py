@@ -12,7 +12,7 @@ def filter_files(x):
             return False
     return True 
     
-def zip_folder(root_path,name_zip):
+def zip_folder(root_path, name_zip):
     base_diname = os.path.basename(root_path)
     dirname = os.path.dirname(root_path)
     files = Path(root_path).glob('**/*')
@@ -27,7 +27,7 @@ def zip_folder(root_path,name_zip):
             archive.write(file_path, arcname=new_name_file)
 
 
-def unzip(file_path,destination_path):
+def unzip(file_path, destination_path):
     with zipfile.ZipFile(file_path, 'r') as zip_ref:
         zip_ref.extractall(destination_path)
 

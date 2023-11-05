@@ -26,9 +26,8 @@ from docopt import docopt
 from pytorch_lightning import Trainer
 import tempfile
 from datetime import datetime as dt
+from .utils.processing_data import unzip
 
-
-from utils.processing_data import unzip
 
 class Training:
     def __init__(self, input_zip: str, 
@@ -38,7 +37,8 @@ class Training:
 
         self.split = split
         self.input_zip = input_zip
-        temdir = tempfile.gettempdir()
+        temdir = tempfile.TemporaryDirectory().name
+        os.makedirs(temdir, exist_ok = True)
         input_dir_dataset = os.path.join(temdir,'temp_input')
         os.makedirs(input_dir_dataset, exist_ok = True)
         print(f'unzip {input_zip} ...')
