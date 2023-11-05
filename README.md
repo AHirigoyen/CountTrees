@@ -2,9 +2,7 @@
 
 ## Install Repository 
 ```
-git clone 
-cd CountTrees
-pip install --upgrade -r requirements.txt
+!pip install -U git+https://github.com/aguirrejuan/CountTrees.git --quiet 
 ```
 
 ## Processing Dataset for Compatibility in Training  with Deepforest.
@@ -12,19 +10,19 @@ pip install --upgrade -r requirements.txt
 Processing of dataset for training from Arcgis Pro Labeled tools to be compatible with Deepforest. 
 
 ```
-python utils/processing_data.py --input_dit FOLDER --output_dir FOLDER
+processing_data --input_dit FOLDER --output_dir FOLDER
 ```
 
 
 ## Training 
-The input dir must to be in the format of ```python utils/processing_data.py``` output directory.
+The input dir must to be in the format of ```processing_data``` output directory.
 
 ```
-python train.py --input_dir FOLDER  --output_dir FOLDER 
+train --input_dir FOLDER  --output_dir FOLDER 
 ```
 
 ## Inference 
 
 ```
-python inference.py model_path img output_dir
+inference model_path img output_dir
 ```

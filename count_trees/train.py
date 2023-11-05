@@ -81,7 +81,7 @@ class Training:
             return path_csv, path_csv
         
     def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', **kwargs): 
-        #self.evaluate("results_pre_training.csv")
+        self.evaluate("results_pre_training.csv")
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config['batch_size'] = batch_size

@@ -125,7 +125,8 @@ def process_data(input_zip: str, output_zip: str) -> None:
     """Transform raster data and labels from Arcgis Pro to Deepforest
     format.
     """
-    temdir = tempfile.gettempdir()
+    temdir = tempfile.TemporaryDirectory().name
+    os.makedirs(temdir, exist_ok = True)
     input_dirname = os.path.join(temdir,'temp_input_preprocessing')
     output_dirname = os.path.join(temdir,'temp_output_preprocessing')
 
@@ -168,7 +169,8 @@ def process_data(input_zip: str, output_zip: str) -> None:
     shutil.rmtree(output_dirname)
 
 
-if __name__ == "__main__":
+
+def main():
     args = docopt(__doc__)
 
     input_zip = args['--input_zip']
@@ -181,3 +183,7 @@ if __name__ == "__main__":
         process_data(input_zip, out_zip)
     elif input_raster: 
         ProcessImages.process_image(input_raster, ouput_raster)
+
+
+if __name__ == "__main__":
+    main()

@@ -15,6 +15,10 @@ from .utils.zip import zip_folder
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+import warnings
+warnings.filterwarnings('ignore')
 
 
 def circle_to_square(circle):
