@@ -87,10 +87,11 @@ class Training:
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config['batch_size'] = batch_size
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
+        self.model.config["train"]["augment"] = True
 
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = False
-        
+
         self.model.trainer =  Trainer(
                                       accelerator=accelerator,
                                       enable_checkpointing=False,
