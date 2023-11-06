@@ -29,7 +29,8 @@ setup(
         'inference=count_trees.inference:main',
         'train=count_trees.train:main',
         'generate_dataset=count_trees.generate_dataset:main',
-        'processing_data=count_trees.utils.processing_data:main'
+        'processing_data=count_trees.utils.processing_data:main',
+        'visualize_data=count_trees.utils.plot:main'
         ]
         },
 

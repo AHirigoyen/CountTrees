@@ -27,6 +27,7 @@ from pytorch_lightning import Trainer
 import tempfile
 from datetime import datetime as dt
 from .utils.processing_data import unzip
+from .utils.augmentation import get_transform
 
 
 class Training:
@@ -50,7 +51,7 @@ class Training:
         
         self.input_dir_dataset = input_dir_dataset
         self.ouput_dir = ouput_dir
-        self.model = main_model.deepforest()
+        self.model = main_model.deepforest(transforms=get_transform)
 
         if checkpoint:
             self.model.model.load_state_dict(torch.load(checkpoint))

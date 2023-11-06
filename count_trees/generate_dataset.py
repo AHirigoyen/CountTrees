@@ -1,6 +1,9 @@
 """
 Usage:
-    generate_dataset <shape_labels> <raster> <output_zip>
+    generate_dataset <shape_labels> <raster> <output_zip> [--patch_size patch_size]
+
+Options:
+    --patch_size patch_size       Patch size [default: 400]. 
 """
 from docopt import docopt
 import geopandas as gpd
@@ -43,6 +46,7 @@ def main():
     input_shapefile = args['<shape_labels>']
     raster_path = args['<raster>']
     output_zip = args['<output_zip>']
+    patch_size = int(args['--patch_size'])
 
     logger.info('Processing shape')
 
@@ -52,10 +56,8 @@ def main():
 
     generate_squared_shapes(input_shapefile, output_shapefile)
 
-
     output_raster = os.path.join(temdir, 'annotations.tif')
     ProcessImages.process_image(raster_path, output_raster)
-
 
     df = shapefile_to_annotations(
         shapefile=output_shapefile,
@@ -73,7 +75,7 @@ def main():
     annotations = split_raster(
             path_to_raster=output_raster,
             annotations_file=temp_csv,
-            patch_size=450,
+            patch_size=patch_size,
             patch_overlap=0,
             base_dir=output_folder,
             allow_empty=False
