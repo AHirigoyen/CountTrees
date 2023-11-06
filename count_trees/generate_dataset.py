@@ -1,9 +1,10 @@
 """
 Usage:
-    generate_dataset <shape_labels> <raster> <output_zip> [--patch_size patch_size]
+    generate_dataset <shape_labels> <raster> <output_zip> [--patch_size patch_size --patch_overlap patch_overlap]
 
 Options:
-    --patch_size patch_size       Patch size [default: 400]. 
+    --patch_size patch_size         Patch size [default: 400]. 
+    --patch_overlap patch_overlap   Patch_overlap (Percentage) [default: 0]. 
 """
 from docopt import docopt
 import geopandas as gpd
@@ -47,6 +48,7 @@ def main():
     raster_path = args['<raster>']
     output_zip = args['<output_zip>']
     patch_size = int(args['--patch_size'])
+    patch_overlap = float(args['--patch_overlap'])
 
     logger.info('Processing shape')
 
@@ -76,7 +78,7 @@ def main():
             path_to_raster=output_raster,
             annotations_file=temp_csv,
             patch_size=patch_size,
-            patch_overlap=0,
+            patch_overlap=patch_overlap,
             base_dir=output_folder,
             allow_empty=False
         )
