@@ -1,6 +1,6 @@
 """
 Usage:
-    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --nms_thresh NMS_THRESH]
+    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD]
 
 Options:
     --input_zip ZIP_FILE        Folder with the dataset in format of Deepforest.
@@ -11,6 +11,7 @@ Options:
     --checkpoint PATH           Path to checkpoint to continue training
     --upsampling                Make upsampling
     --nms_thresh                Nms_thresh [default: 0.05]
+    --iou_threshold             iou_threshold [default: 0.4]
 """
 import warnings
 
@@ -108,9 +109,8 @@ class Training:
 
 
     def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False,
-              nms_thresh=0.05, **kwargs): 
-        self.evaluate("results_pre_training.csv")
-
+              nms_thresh=0.05, iou_threshold=0.4, **kwargs): 
+        
         if upsampling:
             self.upsampling()
 
@@ -123,6 +123,9 @@ class Training:
 
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = False
+
+
+        self.evaluate("results_pre_training.csv", iou_threshold=iou_threshold)
 
         self.model.trainer =  Trainer(
                                       accelerator=accelerator,
@@ -138,9 +141,9 @@ class Training:
                             f"checkpoint_{dt.now():%Y_%m_%d_%H_%M_%S}")
         torch.save(self.model.model.state_dict(), ouput_model_name)
 
-    def evaluate(self, _file='results.csv'):
+    def evaluate(self, _file='results.csv', iou_threshold = 0.4):
         print('Evaluating...')
-        results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = 0.4)
+        results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = iou_threshold)
         results["results"].to_csv(os.path.join(self.ouput_dir, _file))
         print(f"Box precision {results['box_precision']}")
         print(f"Box Recall {results['box_recall']}")
@@ -159,6 +162,7 @@ def main():
     checkpoint = args['--checkpoint']
     upsampling = args['--upsampling']
     nms_thresh = float(args['--nms_thresh'])
+    iou_threshold = float(args['--iou_threshold'])
    
     training = Training(input_zip, out_dirname, checkpoint, split=split)
     training.train(epochs=epochs, batch_size=bath_size, upsampling=upsampling, nms_thresh=nms_thresh)
