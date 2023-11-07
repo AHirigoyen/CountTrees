@@ -157,7 +157,7 @@ class Training:
 
         results_torchmetrics = self.model.trainer.validate(self.model)
         results_pr = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = iou_threshold)
-        
+        results_pr["results"] =  results_pr["results"].to_dict(orient="records")       
         save_json(results_torchmetrics, os.path.join(self.ouput_dir, file_torchmetrics))
         save_json(results_pr, os.path.join(self.ouput_dir, file_pr))
 
