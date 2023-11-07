@@ -1,6 +1,6 @@
 """
 Usage:
-    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling]
+    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --nms_thresh NMS_THRESH]
 
 Options:
     --input_zip ZIP_FILE        Folder with the dataset in format of Deepforest.
@@ -10,6 +10,7 @@ Options:
     --split SPLIT               Percentage of split [default: 0.2]
     --checkpoint PATH           Path to checkpoint to continue training
     --upsampling                Make upsampling
+    --nms_thresh                Nms_thresh [default: 0.05]
 """
 import warnings
 
@@ -106,7 +107,8 @@ class Training:
 
 
 
-    def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False, **kwargs): 
+    def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False,
+              nms_thresh=0.05, **kwargs): 
         self.evaluate("results_pre_training.csv")
 
         if upsampling:
@@ -115,6 +117,7 @@ class Training:
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config['batch_size'] = batch_size
+        self.model.config['nms_thresh'] = nms_thresh
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
         self.model.config["train"]["augment"] = True
 
@@ -155,9 +158,10 @@ def main():
     split = float(args['--split'])
     checkpoint = args['--checkpoint']
     upsampling = args['--upsampling']
+    nms_thresh = float(args['--nms_thresh'])
    
     training = Training(input_zip, out_dirname, checkpoint, split=split)
-    training.train(epochs=epochs, batch_size=bath_size, upsampling=upsampling)
+    training.train(epochs=epochs, batch_size=bath_size, upsampling=upsampling, nms_thresh=nms_thresh)
     training.save()
     training.evaluate()
 
