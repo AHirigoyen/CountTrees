@@ -165,7 +165,7 @@ def main():
     iou_threshold = float(args['--iou_threshold'])
    
     training = Training(input_zip, out_dirname, checkpoint, split=split)
-    training.train(epochs=epochs, batch_size=bath_size, upsampling=upsampling, nms_thresh=nms_thresh)
+    training.train(epochs=epochs, batch_size=bath_size, upsampling=upsampling, nms_thresh=nms_thresh, iou_threshold=iou_threshold)
     training.save()
     training.evaluate()
 
