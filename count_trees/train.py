@@ -1,6 +1,6 @@
 """
 Usage:
-    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH]
+    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling]
 
 Options:
     --input_zip ZIP_FILE        Folder with the dataset in format of Deepforest.
@@ -9,6 +9,7 @@ Options:
     --batch_size BATCH_SIZE     Size of batch_size [default: 8]
     --split SPLIT               Percentage of split [default: 0.2]
     --checkpoint PATH           Path to checkpoint to continue training
+    --upsampling                Make upsampling
 """
 import warnings
 
@@ -28,6 +29,7 @@ import tempfile
 from datetime import datetime as dt
 from .utils.processing_data import unzip
 from .utils.augmentation import get_transform
+import shutil
 
 
 class Training:
@@ -38,9 +40,9 @@ class Training:
 
         self.split = split
         self.input_zip = input_zip
-        temdir = tempfile.TemporaryDirectory().name
-        os.makedirs(temdir, exist_ok = True)
-        input_dir_dataset = os.path.join(temdir,'temp_input')
+        self.temdir = tempfile.TemporaryDirectory().name
+        os.makedirs(self.temdir, exist_ok = True)
+        input_dir_dataset = os.path.join(self.temdir,'temp_input')
         os.makedirs(input_dir_dataset, exist_ok = True)
         print(f'unzip {input_zip} ...')
         unzip(input_zip, input_dir_dataset)
@@ -80,9 +82,36 @@ class Training:
             return train_file,validation_file
         else:
             return path_csv, path_csv
-        
-    def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', **kwargs): 
+    
+
+    def upsampling(self,):
+        train = pd.read_csv(self.train_file)
+
+        new_path = os.path.join(self.input_dir_dataset,'upsampling')
+        os.makedirs(new_path, exist_ok = True)
+
+        new_train = train.copy()
+
+        images = new_train['image_path'].unique()
+        for img in images: 
+            image_path = os.path.join(self.input_dir_dataset, img)
+            new_image_path = os.path.join(new_path, img)
+            shutil.copy(image_path, new_image_path)
+
+        new_train['image_path'] = new_train['image_path'].apply(lambda x: os.path.join(upsampling,x))
+
+        results = pd.concat([train,new_train])
+
+        results.to_csv(self.train_file, index=False)
+
+
+
+    def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False, **kwargs): 
         self.evaluate("results_pre_training.csv")
+
+        if upsampling:
+            self.upsampling()
+
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config['batch_size'] = batch_size
@@ -125,9 +154,10 @@ def main():
     bath_size = int(args['--batch_size'])
     split = float(args['--split'])
     checkpoint = args['--checkpoint']
+    upsampling = args['--upsampling']
    
     training = Training(input_zip, out_dirname, checkpoint, split=split)
-    training.train(epochs=epochs, batch_size=bath_size)
+    training.train(epochs=epochs, batch_size=bath_size, upsampling=upsampling)
     training.save()
     training.evaluate()
 
