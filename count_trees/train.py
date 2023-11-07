@@ -33,6 +33,15 @@ from datetime import datetime as dt
 from .utils.processing_data import unzip
 from .utils.augmentation import get_transform
 import shutil
+import json
+
+
+def save_json(dict_results, path_file):
+    # Serializing json
+    json_object = json.dumps(dict_results)
+    # Writing to sample.json
+    with open(path_file, "w") as outfile:
+        outfile.write(json_object)
 
 
 class Training:
@@ -117,6 +126,7 @@ class Training:
 
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
+        self.model.config["validation"]["csv_file"] = self.validation_file
         self.model.config['batch_size'] = batch_size
         self.model.config['nms_thresh'] = nms_thresh
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
@@ -142,15 +152,22 @@ class Training:
                             f"checkpoint_{dt.now():%Y_%m_%d_%H_%M_%S}")
         torch.save(self.model.model.state_dict(), ouput_model_name)
 
-    def evaluate(self, _file='results.csv', iou_threshold = 0.4):
+    def evaluate(self, file_pr='results_pr.json', file_torchmetrics='results_torchmetrics.json', iou_threshold = 0.4):
         print('Evaluating...')
-        results = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = iou_threshold)
-        results["results"].to_csv(os.path.join(self.ouput_dir, _file))
-        print(f"Box precision {results['box_precision']}")
-        print(f"Box Recall {results['box_recall']}")
-        print(f"Class Recall {results['class_recall']}")
+
+        results_torchmetrics = self.model.trainer.validate(self.model)
+        results_pr = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = iou_threshold)
+        
+        save_json(results_torchmetrics, os.path.join(self.ouput_dir, file_torchmetrics))
+        save_json(results_pr, os.path.join(self.ouput_dir, file_pr))
+
+        print(results_torchmetrics)
+
+        print(f"Box precision {results_pr['box_precision']}")
+        print(f"Box Recall {results_pr['box_recall']}")
+        print(f"Class Recall {results_pr['class_recall']}")
         print("Results")
-        print(results["results"])
+        print(results_pr["results"])
         
 
 def main():
