@@ -1,17 +1,18 @@
 """
 Usage:
-    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD]
+    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD --score_thresh SCORE_THRESH]
 
 Options:
-    --input_zip ZIP_FILE        Folder with the dataset in format of Deepforest.
-    --output_dir FOLDER         Folder to save ouput data (model and evaluation results).
-    --epochs EPOCHS             Number of epochs to train [default: 10]
-    --batch_size BATCH_SIZE     Size of batch_size [default: 8]
-    --split SPLIT               Percentage of split [default: 0.2]
-    --checkpoint PATH           Path to checkpoint to continue training
-    --upsampling                Make upsampling
-    --nms_thresh                Nms_thresh [default: 0.05]
-    --iou_threshold             iou_threshold [default: 0.4]
+    --input_zip ZIP_FILE                 Folder with the dataset in format of Deepforest.
+    --output_dir FOLDER                  Folder to save ouput data (model and evaluation results).
+    --epochs EPOCHS                      Number of epochs to train [default: 10]
+    --batch_size BATCH_SIZE              Size of batch_size [default: 8]
+    --split SPLIT                        Percentage of split [default: 0.2]
+    --checkpoint PATH                    Path to checkpoint to continue training
+    --upsampling                         Make upsampling
+    --nms_thresh NMS_THRESH              Nms_thresh [default: 0.05]
+    --iou_threshold IOU_THRESHOLD        iou_threshold [default: 0.4]
+    --score_thresh SCORE_THRESH          score_thresh [default: 0.1]
 """
 import warnings
 
@@ -109,7 +110,7 @@ class Training:
 
 
     def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False,
-              nms_thresh=0.05, iou_threshold=0.4, **kwargs): 
+              nms_thresh=0.05, iou_threshold=0.4, score_thresh=0.1, **kwargs): 
         
         if upsampling:
             self.upsampling()
@@ -120,10 +121,10 @@ class Training:
         self.model.config['nms_thresh'] = nms_thresh
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
         self.model.config["train"]["augment"] = True
+        self.model.config['score_thresh'] = score_thresh
 
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = False
-
 
         self.evaluate("results_pre_training.csv", iou_threshold=iou_threshold)
 
@@ -163,11 +164,14 @@ def main():
     upsampling = args['--upsampling']
     nms_thresh = float(args['--nms_thresh'])
     iou_threshold = float(args['--iou_threshold'])
+    score_thresh = float(args['--score_thresh'])
    
     training = Training(input_zip, out_dirname, checkpoint, split=split)
-    training.train(epochs=epochs, batch_size=bath_size, upsampling=upsampling, nms_thresh=nms_thresh, iou_threshold=iou_threshold)
+    training.train(epochs=epochs, batch_size=bath_size,
+                   upsampling=upsampling, nms_thresh=nms_thresh,
+                   iou_threshold=iou_threshold, score_thresh=score_thresh)
     training.save()
-    training.evaluate()
+    training.evaluate(iou_threshold=iou_threshold)
 
 
 if __name__ == "__main__":

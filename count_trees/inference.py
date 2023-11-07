@@ -36,6 +36,7 @@ class Inference:
         os.makedirs(self.save_dir_img, exist_ok = True)
         os.makedirs(self.save_dir_pred_img, exist_ok = True)
 
+
     def __call__(self, path_img: str, patch_size: int = 400) -> None:
         new_path_img = os.path.basename(path_img)
         new_path_img = os.path.join(self.save_dir_img, new_path_img)
@@ -49,7 +50,6 @@ class Inference:
         dataframe.to_csv(self.results_df, index_label='id')
         boxes = project(path_img, dataframe)
         boxes.to_file(self.shape_dir, driver='ESRI Shapefile')
-
 
 
     @staticmethod
