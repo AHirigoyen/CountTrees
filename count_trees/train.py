@@ -98,7 +98,7 @@ class Training:
             new_image_path = os.path.join(new_path, img)
             shutil.copy(image_path, new_image_path)
 
-        new_train['image_path'] = new_train['image_path'].apply(lambda x: os.path.join(upsampling,x))
+        new_train['image_path'] = new_train['image_path'].apply(lambda x: os.path.join('upsampling',x))
 
         results = pd.concat([train,new_train])
 
