@@ -15,7 +15,7 @@ import os
 
 import pandas as pd
 import torch
-from deepforest import main
+from deepforest import main as main_model
 from deepforest.visualize import plot_prediction_dataframe
 from docopt import docopt
 
@@ -58,7 +58,7 @@ class Inference:
             current_device = torch.device("cuda")
         else:
             current_device = torch.device("cpu")
-        model = main.deepforest()
+        model = main_model.deepforest()
         model.model.load_state_dict(torch.load(path_model,map_location=current_device))
         model.to("cuda")
         return model 
