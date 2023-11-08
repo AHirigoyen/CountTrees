@@ -34,6 +34,8 @@ from .utils.processing_data import unzip
 from .utils.augmentation import get_transform
 import shutil
 import json
+import yaml
+
 
 
 def save_json(dict_results, path_file):
@@ -150,9 +152,14 @@ class Training:
         self.model.trainer.fit(self.model)
 
     def save(self,):
+        fingerprint = f"{dt.now():%Y_%m_%d_%H_%M_%S}"
         ouput_model_name = "{}/{}.pl".format(self.ouput_dir, 
-                            f"checkpoint_{dt.now():%Y_%m_%d_%H_%M_%S}")
+                            f"checkpoint_{fingerprint}")
         torch.save(self.model.model.state_dict(), ouput_model_name)
+        
+        yaml_config = f"config_model_{fingerprint}.yaml"
+        with open(yaml_config, "w") as file:
+            yaml.dump(self.model.config,file)
 
 
     def evaluate(self, file_pr='results_pr.json', file_torchmetrics='results_torchmetrics.json', iou_threshold = 0.4):

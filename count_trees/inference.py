@@ -21,13 +21,25 @@ from docopt import docopt
 
 from .utils.processing_data import ProcessImages
 from .utils.convert_csv_to_shape import project
+import yaml
 
+
+def load_config(model, path_model):
+    path_yaml = path_model.replace('checkpoint', 'config')
+    path_yaml = path_yaml.replace('pt', 'yaml')
+    try: 
+        with open(path_yaml, 'r') as stream:
+            yaml_dict = yaml.safe_load(stream)
+        model.config = yaml_dict
+    except:
+        pass 
 
 class Inference:
     """Perform inference over raster data with datatype uint8
     """
     def __init__(self, path_model: str, out_dirname: str) -> None:
         self.model = self.load_model(path_model)
+        load_config(self.model, path_model)
         print(self.model.config)
         self.save_dir_img = out_dirname
         self.save_dir_pred_img = os.path.join(out_dirname,'predictions')
