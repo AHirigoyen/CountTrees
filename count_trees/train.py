@@ -15,8 +15,6 @@ Options:
     --score_thresh SCORE_THRESH          score_thresh [default: 0.1]
 """
 import warnings
-
-# Filter out the specific RuntimeWarning
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="shapely.set_operations")
 
 import os
@@ -35,7 +33,6 @@ from .utils.augmentation import get_transform
 import shutil
 import json
 import yaml
-
 
 
 def save_json(dict_results, path_file):
@@ -76,6 +73,7 @@ class Training:
         self.model.to("cuda")
         self.train_file, self.validation_file = self.__split_dataset(self.split) 
         os.makedirs(self.ouput_dir, exist_ok = True)
+
 
     def __split_dataset(self, split: float) -> Tuple[str, str]:
         path_csv = os.path.join(self.input_dir_dataset, 'annotations.csv')
@@ -153,11 +151,12 @@ class Training:
 
     def save(self,):
         fingerprint = f"{dt.now():%Y_%m_%d_%H_%M_%S}"
-        ouput_model_name = "{}/{}.pl".format(self.ouput_dir, 
-                            f"checkpoint_{fingerprint}")
+        ouput_model_name = os.path.join(self.ouput_dir, f"checkpoint_{fingerprint}.pl")
+
         torch.save(self.model.model.state_dict(), ouput_model_name)
         
-        yaml_config = f"config_model_{fingerprint}.yaml"
+
+        yaml_config = os.path.join(self.ouput_dir, f"config_model_{fingerprint}.yaml")
         with open(yaml_config, "w") as file:
             yaml.dump(self.model.config,file)
 

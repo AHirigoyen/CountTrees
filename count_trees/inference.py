@@ -7,8 +7,6 @@ Options:
     --patch_size P    Folder with the dataset in format of Deepforest [default: 400]
 """
 import warnings
-
-# Filter out the specific RuntimeWarning
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="shapely.set_operations")
 
 import os
@@ -26,13 +24,14 @@ import yaml
 
 def load_config(model, path_model):
     path_yaml = path_model.replace('checkpoint', 'config')
-    path_yaml = path_yaml.replace('pt', 'yaml')
+    path_yaml = path_yaml.replace('pl', 'yaml')
     try: 
         with open(path_yaml, 'r') as stream:
             yaml_dict = yaml.safe_load(stream)
         model.config = yaml_dict
     except:
         pass 
+
 
 class Inference:
     """Perform inference over raster data with datatype uint8
@@ -82,8 +81,6 @@ class Inference:
         df = pd.read_csv(self.results_df)
         plot_prediction_dataframe(df, root_dir=self.save_dir_img, 
                                    savedir=self.save_dir_pred_img)
-
-
 
 
 def main():
