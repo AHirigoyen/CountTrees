@@ -28,6 +28,7 @@ class Inference:
     """
     def __init__(self, path_model: str, out_dirname: str) -> None:
         self.model = self.load_model(path_model)
+        print(model.config)
         self.save_dir_img = out_dirname
         self.save_dir_pred_img = os.path.join(out_dirname,'predictions')
         self.results_df = os.path.join(self.save_dir_img, 'results.csv')
