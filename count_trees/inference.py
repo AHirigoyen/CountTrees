@@ -23,7 +23,7 @@ import yaml
 
 
 def load_config(model, path_model):
-    path_yaml = path_model.replace('checkpoint', 'config')
+    path_yaml = path_model.replace('checkpoint', 'config_model')
     path_yaml = path_yaml.replace('pl', 'yaml')
     try: 
         with open(path_yaml, 'r') as stream:
