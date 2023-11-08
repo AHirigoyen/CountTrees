@@ -117,7 +117,6 @@ class Training:
         results.to_csv(self.train_file, index=False)
 
 
-
     def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False,
               nms_thresh=0.05, iou_threshold=0.4, score_thresh=0.1, **kwargs): 
         
@@ -127,6 +126,7 @@ class Training:
         self.model.config["train"]["epochs"] = epochs
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config["validation"]["csv_file"] = self.validation_file
+        self.model.config["validation"]["root_dir"] = self.input_dir_dataset
         self.model.config['batch_size'] = batch_size
         self.model.config['nms_thresh'] = nms_thresh
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
@@ -136,7 +136,9 @@ class Training:
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = False
 
-        self.evaluate("results_pre_training.csv", iou_threshold=iou_threshold)
+        self.evaluate(file_pr='results_pr_pretrained.json',
+                      file_torchmetrics='results_torchmetrics_pretrained.json',
+                      iou_threshold=iou_threshold)
 
         self.model.trainer =  Trainer(
                                       accelerator=accelerator,
@@ -152,16 +154,19 @@ class Training:
                             f"checkpoint_{dt.now():%Y_%m_%d_%H_%M_%S}")
         torch.save(self.model.model.state_dict(), ouput_model_name)
 
+
     def evaluate(self, file_pr='results_pr.json', file_torchmetrics='results_torchmetrics.json', iou_threshold = 0.4):
         print('Evaluating...')
 
         results_torchmetrics = self.model.trainer.validate(self.model)
+
         results_pr = self.model.evaluate(self.validation_file, self.input_dir_dataset, iou_threshold = iou_threshold)
-        results_pr["results"] =  results_pr["results"].to_dict(orient="records")       
+        results_pr["results"] =  results_pr["results"].to_dict(orient="records")
+        results_pr['predictions'] = results_pr['predictions'].to_dict(orient="records")
+        results_pr['class_recall'] = results_pr['class_recall'].to_dict(orient="records")
+
         save_json(results_torchmetrics, os.path.join(self.ouput_dir, file_torchmetrics))
         save_json(results_pr, os.path.join(self.ouput_dir, file_pr))
-
-        print(results_torchmetrics)
 
         print(f"Box precision {results_pr['box_precision']}")
         print(f"Box Recall {results_pr['box_recall']}")
