@@ -27,12 +27,15 @@ warnings.filterwarnings('ignore')
 
 def circle_to_square(circle):
     # Assuming the 'geometry' column contains circular polygons
-    radius = circle.buffer(0).envelope.exterior.xy[0][0] - circle.exterior.xy[0][0]
-    side_length = 2 * radius
-    centroid = circle.centroid
-    min_x, min_y, max_x, max_y = centroid.x - radius, centroid.y - radius, centroid.x + radius, centroid.y + radius
-    square = Polygon([(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_x, max_y)])
-    return square
+    try:
+        radius = circle.buffer(0).envelope.exterior.xy[0][0] - circle.exterior.xy[0][0]
+        side_length = 2 * radius
+        centroid = circle.centroid
+        min_x, min_y, max_x, max_y = centroid.x - radius, centroid.y - radius, centroid.x + radius, centroid.y + radius
+        square = Polygon([(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_x, max_y)])
+        return square
+    except:
+        return None
 
 
 def generate_squared_shapes(input_shapefile, output_shapefile):
