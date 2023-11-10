@@ -42,7 +42,11 @@ def generate_squared_shapes(input_shapefile, output_shapefile):
     gdf = gpd.read_file(input_shapefile)
     # Convert circles to squares
     gdf['geometry'] = gdf['geometry'].apply(circle_to_square)
-    gdf.to_file(output_shapefile)
+    gdf_clean = gdf.dropna(subset=['geometry'])
+
+    # Reset index, if desired
+    gdf_clean.reset_index(drop=True, inplace=True)
+    gdf_clean.to_file(output_shapefile)
 
 
 def main():
