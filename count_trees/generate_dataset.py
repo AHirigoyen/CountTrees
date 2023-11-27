@@ -17,6 +17,8 @@ import tempfile
 import os 
 from .utils.zip import zip_folder
 import logging
+from glob import glob 
+import pandas as pd 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -51,8 +53,8 @@ def generate_squared_shapes(input_shapefile, output_shapefile):
 
 def main():
     args = docopt(__doc__)
-    input_shapefile = args['<shape_labels>']
-    raster_path = args['<raster>']
+    input_shapefile = args['<shape_labels>'].split(',')
+    raster_path = args['<raster>'].split(',')
     output_zip = args['<output_zip>']
     patch_size = int(args['--patch_size'])
     patch_overlap = float(args['--patch_overlap'])
@@ -61,36 +63,54 @@ def main():
 
     temdir = tempfile.TemporaryDirectory().name
     os.makedirs(temdir, exist_ok = True)
-    output_shapefile = os.path.join(temdir, 'squares.shp')
+    root_output_folder = os.path.join(temdir, 'output')
+    os.makedirs(root_output_folder, exist_ok = True)
 
-    generate_squared_shapes(input_shapefile, output_shapefile)
+    for i, (input_shapefile, raster_path) in enumerate(zip(input_shapefile, raster_path)):
 
-    output_raster = os.path.join(temdir, 'annotations.tif')
-    ProcessImages.process_image(raster_path, output_raster)
+        output_shapefile = os.path.join(temdir, 'squares.shp')
+        generate_squared_shapes(input_shapefile, output_shapefile)
 
-    df = shapefile_to_annotations(
-        shapefile=output_shapefile,
-        rgb=output_raster, convert_to_boxes=False, buffer_size=0.15
-    )
-            
-    temp_csv = os.path.join(temdir, 'annotations.csv')
+        output_raster = os.path.join(temdir, 'annotations.tif')
+        ProcessImages.process_image(raster_path, output_raster)
 
-    df.to_csv(temp_csv, index=False)
-
-    output_folder = os.path.join(temdir, 'output_dir')
-
-    logger.info('Generate annotations')
-
-    annotations = split_raster(
-            path_to_raster=output_raster,
-            annotations_file=temp_csv,
-            patch_size=patch_size,
-            patch_overlap=patch_overlap,
-            base_dir=output_folder,
-            allow_empty=False
+        df = shapefile_to_annotations(
+            shapefile=output_shapefile,
+            rgb=output_raster, convert_to_boxes=False, buffer_size=0.15
         )
-    
-    zip_folder(output_folder, output_zip)
+                
+        temp_csv = os.path.join(temdir, 'annotations.csv')
+
+        df.to_csv(temp_csv, index=False)
+
+        output_folder = os.path.join(root_output_folder, f'output_dir_{i}')
+
+        logger.info('Generate annotations')
+
+        annotations = split_raster(
+                path_to_raster=output_raster,
+                annotations_file=temp_csv,
+                patch_size=patch_size,
+                patch_overlap=patch_overlap,
+                base_dir=output_folder,
+                allow_empty=True
+            )
+        
+
+    dfs_paths = glob(os.path.join(root_output_folder, '*', 'annotations.csv'))
+
+    dfs =[]
+    for df_path in dfs_paths:
+        df = pd.read_csv(df_path)
+        name_folder = os.path.dirname(df_path)
+        name_folder = os.path.basename(name_folder)
+        df['image_path'] = df['image_path'].apply(lambda x: os.path.join(name_folder,x))
+        dfs.append(df)
+
+    df = pd.concat(dfs)
+    df.to_csv(os.path.join(root_output_folder, 'annotations.csv'), index=False)
+
+    zip_folder(root_output_folder, output_zip)
 
 
 if __name__ == "__main__":
