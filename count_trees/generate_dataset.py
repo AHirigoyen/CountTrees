@@ -1,10 +1,11 @@
 """
 Usage:
-    generate_dataset <shape_labels> <raster> <output_zip> [--patch_size patch_size --patch_overlap patch_overlap]
+    generate_dataset <shape_labels> <raster> <output_zip> [--patch_size patch_size --patch_overlap patch_overlap --allow_empty] 
 
 Options:
     --patch_size patch_size         Patch size [default: 400]. 
     --patch_overlap patch_overlap   Patch_overlap (Percentage) [default: 0]. 
+    --allow_empty                   If include empty images.
 """
 from docopt import docopt
 import geopandas as gpd
@@ -19,6 +20,7 @@ from .utils.zip import zip_folder
 import logging
 from glob import glob 
 import pandas as pd 
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -58,15 +60,19 @@ def main():
     output_zip = args['<output_zip>']
     patch_size = int(args['--patch_size'])
     patch_overlap = float(args['--patch_overlap'])
+    allow_empty = args['--allow_empty']
 
     logger.info('Processing shape')
 
-    temdir = tempfile.TemporaryDirectory().name
-    os.makedirs(temdir, exist_ok = True)
-    root_output_folder = os.path.join(temdir, 'output')
+    temdir_save = tempfile.TemporaryDirectory().name
+    os.makedirs(temdir_save, exist_ok = True)
+    root_output_folder = os.path.join(temdir_save, 'output')
     os.makedirs(root_output_folder, exist_ok = True)
 
-    for i, (input_shapefile, raster_path) in enumerate(zip(input_shapefile, raster_path)):
+    for i, (input_shapefile, raster_path) in tqdm(enumerate(zip(input_shapefile, raster_path))):
+
+        temdir = tempfile.TemporaryDirectory().name
+        os.makedirs(temdir, exist_ok = True)
 
         output_shapefile = os.path.join(temdir, 'squares.shp')
         generate_squared_shapes(input_shapefile, output_shapefile)
@@ -93,7 +99,7 @@ def main():
                 patch_size=patch_size,
                 patch_overlap=patch_overlap,
                 base_dir=output_folder,
-                allow_empty=True
+                allow_empty=allow_empty
             )
         
 
