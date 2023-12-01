@@ -1,6 +1,6 @@
 """
 Usage:
-    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD --score_thresh SCORE_THRESH --lr LEARNING_RATE]
+    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --augment  --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD --score_thresh SCORE_THRESH --lr LEARNING_RATE]
 
 Options:
     --input_zip ZIP_FILE                 Folder with the dataset in format of Deepforest.
@@ -10,6 +10,7 @@ Options:
     --split SPLIT                        Percentage of split [default: 0.2]
     --checkpoint PATH                    Path to checkpoint to continue training
     --upsampling                         Make upsampling
+    --augment                            Apply transformations
     --nms_thresh NMS_THRESH              Nms_thresh [default: 0.05]
     --iou_threshold IOU_THRESHOLD        iou_threshold [default: 0.4]
     --score_thresh SCORE_THRESH          score_thresh [default: 0.1]
@@ -122,7 +123,7 @@ class Training:
 
     def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False,
               nms_thresh=0.05, iou_threshold=0.4, score_thresh=0.1,
-              learning_rate=0.01, **kwargs): 
+              learning_rate=0.01, augment=False, **kwargs): 
         
         if upsampling:
             self.upsampling()
@@ -131,7 +132,7 @@ class Training:
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config["train"]["lr"] = learning_rate
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
-        self.model.config["train"]["augment"] = True
+        self.model.config["train"]["augment"] = augment
         self.model.config["accelerator"] = accelerator
 
         self.model.config["validation"]["csv_file"] = self.validation_file
@@ -211,6 +212,7 @@ def main():
     split = float(args['--split'])
     checkpoint = args['--checkpoint']
     upsampling = args['--upsampling']
+    augment = args['--augment']
     nms_thresh = float(args['--nms_thresh'])
     iou_threshold = float(args['--iou_threshold'])
     score_thresh = float(args['--score_thresh'])
@@ -220,7 +222,8 @@ def main():
     training.train(epochs=epochs, batch_size=bath_size,
                    upsampling=upsampling, nms_thresh=nms_thresh,
                    iou_threshold=iou_threshold, score_thresh=score_thresh,
-                   learning_rate=learning_rate)
+                   learning_rate=learning_rate, 
+                   augment=augment)
     training.save()
     training.evaluate(iou_threshold=iou_threshold)
 
