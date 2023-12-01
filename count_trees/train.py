@@ -53,8 +53,10 @@ class Training:
     def __init__(self, input_zip: str, 
                         output_dir: str,
                         checkpoint: str = None,
-                        split: float=0.2) -> None:
+                        split: float=0.2,
+                        augment: bool= False) -> None:
 
+        self.augment = augment
         self.split = split
         self.input_zip = input_zip
         self.temdir = tempfile.TemporaryDirectory().name
@@ -70,8 +72,11 @@ class Training:
         
         self.input_dir_dataset = input_dir_dataset
         self.output_dir = output_dir
-        self.model = main_model.deepforest(transforms=get_transform)
-        #self.model = main_model.deepforest()
+
+        if self.augment:
+            self.model = main_model.deepforest(transforms=get_transform)
+        else:
+            self.model = main_model.deepforest()
 
 
         if checkpoint:
@@ -127,7 +132,7 @@ class Training:
 
     def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False,
               nms_thresh=0.05, iou_threshold=0.4, score_thresh=0.1,
-              learning_rate=0.01, augment=False, fast_dev_run=False,
+              learning_rate=0.01, fast_dev_run=False,
               evaluate_first=True, **kwargs): 
         
         if upsampling:
@@ -137,7 +142,7 @@ class Training:
         self.model.config["train"]["csv_file"] = self.train_file
         self.model.config["train"]["lr"] = learning_rate
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
-        self.model.config["train"]["augment"] = augment
+        self.model.config["train"]["augment"] = self.augment
         self.model.config["accelerator"] = accelerator
 
         self.model.config["validation"]["csv_file"] = self.validation_file
@@ -227,12 +232,11 @@ def main():
     score_thresh = float(args['--score_thresh'])
     learning_rate = float(args['--lr'])
    
-    training = Training(input_zip, out_dirname, checkpoint, split=split)
+    training = Training(input_zip, out_dirname, checkpoint, split=split, augment=augment)
     training.train(epochs=epochs, batch_size=bath_size,
                    upsampling=upsampling, nms_thresh=nms_thresh,
                    iou_threshold=iou_threshold, score_thresh=score_thresh,
-                   learning_rate=learning_rate, 
-                   augment=augment,
+                   learning_rate=learning_rate,                   
                    fast_dev_run=fast_dev_run,
                    evaluate_first=evaluate_first)
     training.save()
