@@ -4,11 +4,11 @@ from albumentations.pytorch import ToTensorV2
 def get_transform(augment):
     if augment:
         transform = A.Compose([
-            A.OneOf([
-                A.RandomCrop(width=200, height=200, p=0.3),
-                A.RandomCrop(width=300, height=300, p=0.3),
-                A.RandomCrop(width=100, height=100, p=0.3),
-            ], p=1),
+            # A.OneOf([
+            #     A.RandomCrop(width=200, height=200, p=0.3),
+            #     A.RandomCrop(width=300, height=300, p=0.3),
+            #     A.RandomCrop(width=100, height=100, p=0.3),
+            # ], p=1),
             A.ShiftScaleRotate(p=0.5),
             A.HorizontalFlip(p=0.5),
             A.RandomRotate90(p=0.5),

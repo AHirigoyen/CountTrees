@@ -1,6 +1,7 @@
+%%writefile /usr/local/lib/python3.10/dist-packages/count_trees/train.py
 """
 Usage:
-    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --augment  --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD --score_thresh SCORE_THRESH --lr LEARNING_RATE]
+    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --augment --fast_dev_run --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD --score_thresh SCORE_THRESH --lr LEARNING_RATE]
 
 Options:
     --input_zip ZIP_FILE                 Folder with the dataset in format of Deepforest.
@@ -11,6 +12,7 @@ Options:
     --checkpoint PATH                    Path to checkpoint to continue training
     --upsampling                         Make upsampling
     --augment                            Apply transformations
+    --fast_dev_run                       fast_dev_run
     --nms_thresh NMS_THRESH              Nms_thresh [default: 0.05]
     --iou_threshold IOU_THRESHOLD        iou_threshold [default: 0.4]
     --score_thresh SCORE_THRESH          score_thresh [default: 0.1]
@@ -69,6 +71,8 @@ class Training:
         self.input_dir_dataset = input_dir_dataset
         self.output_dir = output_dir
         self.model = main_model.deepforest(transforms=get_transform)
+        #self.model = main_model.deepforest()
+
 
         if checkpoint:
             self.model.model.load_state_dict(torch.load(checkpoint))
@@ -123,7 +127,7 @@ class Training:
 
     def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False,
               nms_thresh=0.05, iou_threshold=0.4, score_thresh=0.1,
-              learning_rate=0.01, augment=False, **kwargs): 
+              learning_rate=0.01, augment=False, fast_dev_run=False, **kwargs): 
         
         if upsampling:
             self.upsampling()
@@ -144,11 +148,11 @@ class Training:
 
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = False
-        #self.model.config["train"]["fast_dev_run"] = True
+        self.model.config["train"]["fast_dev_run"] = True
 
         self.evaluate(file_pr='results_pr_pretrained.json',
-                      file_torchmetrics='results_torchmetrics_pretrained.json',
-                      iou_threshold=iou_threshold)
+                     file_torchmetrics='results_torchmetrics_pretrained.json',
+                     iou_threshold=iou_threshold)
 
         # self.model.trainer =  Trainer(
         #                               accelerator=self.model.config["accelerator"],
@@ -212,6 +216,7 @@ def main():
     split = float(args['--split'])
     checkpoint = args['--checkpoint']
     upsampling = args['--upsampling']
+    fast_dev_run = args['--fast_dev_run']
     augment = args['--augment']
     nms_thresh = float(args['--nms_thresh'])
     iou_threshold = float(args['--iou_threshold'])
@@ -223,7 +228,8 @@ def main():
                    upsampling=upsampling, nms_thresh=nms_thresh,
                    iou_threshold=iou_threshold, score_thresh=score_thresh,
                    learning_rate=learning_rate, 
-                   augment=augment)
+                   augment=augment,
+                   fast_dev_run=fast_dev_run)
     training.save()
     training.evaluate(iou_threshold=iou_threshold)
 
