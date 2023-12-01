@@ -82,7 +82,9 @@ def main():
 
         df = shapefile_to_annotations(
             shapefile=output_shapefile,
-            rgb=output_raster, convert_to_boxes=False, buffer_size=0.15
+            rgb=output_raster,
+            geometry_type="bbox", 
+            buffer_size=0.15
         )
                 
         temp_csv = os.path.join(temdir, 'annotations.csv')

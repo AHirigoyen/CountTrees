@@ -27,6 +27,8 @@ import torch
 from deepforest import main as main_model
 from docopt import docopt
 from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 import tempfile
 from datetime import datetime as dt
 from .utils.processing_data import unzip
@@ -46,7 +48,7 @@ def save_json(dict_results, path_file):
 
 class Training:
     def __init__(self, input_zip: str, 
-                        ouput_dir: str,
+                        output_dir: str,
                         checkpoint: str = None,
                         split: float=0.2) -> None:
 
@@ -64,7 +66,7 @@ class Training:
             input_dir_dataset = os.path.join(input_dir_dataset,list_dirs[0])
         
         self.input_dir_dataset = input_dir_dataset
-        self.ouput_dir = ouput_dir
+        self.output_dir = output_dir
         self.model = main_model.deepforest(transforms=get_transform)
 
         if checkpoint:
@@ -73,7 +75,7 @@ class Training:
             self.model.use_release()
         self.model.to("cuda")
         self.train_file, self.validation_file = self.__split_dataset(self.split) 
-        os.makedirs(self.ouput_dir, exist_ok = True)
+        os.makedirs(self.output_dir, exist_ok = True)
 
 
     def __split_dataset(self, split: float) -> Tuple[str, str]:
@@ -130,6 +132,7 @@ class Training:
         self.model.config["train"]["lr"] = learning_rate
         self.model.config["train"]["root_dir"] = self.input_dir_dataset
         self.model.config["train"]["augment"] = True
+        self.model.config["accelerator"] = accelerator
 
         self.model.config["validation"]["csv_file"] = self.validation_file
         self.model.config["validation"]["root_dir"] = self.input_dir_dataset
@@ -140,28 +143,41 @@ class Training:
 
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = False
+        #self.model.config["train"]["fast_dev_run"] = True
 
         self.evaluate(file_pr='results_pr_pretrained.json',
                       file_torchmetrics='results_torchmetrics_pretrained.json',
                       iou_threshold=iou_threshold)
 
-        self.model.trainer =  Trainer(
-                                      accelerator=accelerator,
-                                      enable_checkpointing=False,
-                                      max_epochs=self.model.config["train"]["epochs"],
-                                      default_root_dir=self.ouput_dir,
-                                      **kwargs,
-                                    )
+        # self.model.trainer =  Trainer(
+        #                               accelerator=self.model.config["accelerator"],
+        #                               enable_checkpointing=False,
+        #                               max_epochs=self.model.config["train"]["epochs"],
+        #                               default_root_dir=self.ouput_dir,
+        #                               **kwargs,
+        #                             )
+
+        callback = ModelCheckpoint(dirpath=os.path.join(self.output_dir, 'checkpoints'),
+                                   monitor='box_recall', 
+                                   mode="max",
+                                   save_top_k=3,
+                                   filename="box_recall-{epoch:02d}-{box_recall:.2f}")
+
+        self.model.create_trainer(
+                                  #logger=TensorBoardLogger(save_dir=os.path.join(self.output_dir,'logdir/')), 
+                                  #callbacks=[callback],
+                                  default_root_dir=self.output_dir)
+
         self.model.trainer.fit(self.model)
 
     def save(self,):
         fingerprint = f"{dt.now():%Y_%m_%d_%H_%M_%S}"
-        ouput_model_name = os.path.join(self.ouput_dir, f"checkpoint_{fingerprint}.pl")
+        ouput_model_name = os.path.join(self.output_dir, f"checkpoint_{fingerprint}.pl")
 
         torch.save(self.model.model.state_dict(), ouput_model_name)
         
 
-        yaml_config = os.path.join(self.ouput_dir, f"config_model_{fingerprint}.yaml")
+        yaml_config = os.path.join(self.output_dir, f"config_model_{fingerprint}.yaml")
         with open(yaml_config, "w") as file:
             yaml.dump(self.model.config,file)
 
@@ -176,8 +192,8 @@ class Training:
         results_pr['predictions'] = results_pr['predictions'].to_dict(orient="records")
         results_pr['class_recall'] = results_pr['class_recall'].to_dict(orient="records")
 
-        save_json(results_torchmetrics, os.path.join(self.ouput_dir, file_torchmetrics))
-        save_json(results_pr, os.path.join(self.ouput_dir, file_pr))
+        save_json(results_torchmetrics, os.path.join(self.output_dir, file_torchmetrics))
+        save_json(results_pr, os.path.join(self.output_dir, file_pr))
 
         print(f"Box precision {results_pr['box_precision']}")
         print(f"Box Recall {results_pr['box_recall']}")
