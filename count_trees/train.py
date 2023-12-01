@@ -1,4 +1,3 @@
-%%writefile /usr/local/lib/python3.10/dist-packages/count_trees/train.py
 """
 Usage:
     train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --augment --fast_dev_run --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD --score_thresh SCORE_THRESH --lr LEARNING_RATE]
