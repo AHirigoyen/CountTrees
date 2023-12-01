@@ -171,9 +171,10 @@ class Training:
                                    filename="box_recall-{epoch:02d}-{box_recall:.2f}")
 
         self.model.create_trainer(
-                                  #logger=TensorBoardLogger(save_dir=os.path.join(self.output_dir,'logdir/')), 
-                                  #callbacks=[callback],
-                                  default_root_dir=self.output_dir)
+                                  logger=TensorBoardLogger(save_dir=os.path.join(self.output_dir,'logdir/')), 
+                                  callbacks=[callback],
+                                  default_root_dir=self.output_dir,
+                                  check_val_every_n_epoch=1)
 
         self.model.trainer.fit(self.model)
 
