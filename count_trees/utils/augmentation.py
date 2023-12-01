@@ -3,7 +3,7 @@ from albumentations.pytorch import ToTensorV2
 
 def get_transform(augment):
     if augment:
-        trans = A.Compose([
+        transform = A.Compose([
             A.OneOf([
                 A.RandomCrop(width=200, height=200, p=0.3),
                 A.RandomCrop(width=300, height=300, p=0.3),
@@ -18,6 +18,8 @@ def get_transform(augment):
         ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=["category_ids"]))
     else:
         # Include any basic non-augmentation transforms here if necessary
-        trans = ToTensorV2()
+        transform = A.Compose([ToTensorV2()],
+                              bbox_params=A.BboxParams(format='pascal_voc',
+                                                       label_fields=["category_ids"]))
 
-    return trans
+    return transform
