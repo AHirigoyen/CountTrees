@@ -1,6 +1,6 @@
 """
 Usage:
-    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --augment --fast_dev_run --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD --score_thresh SCORE_THRESH --lr LEARNING_RATE]
+    train --input_zip ZIP_FILE --output_dir FOLDER [--epochs EPOCHS --batch_size BATCH_SIZE --split SPLIT --checkpoint PATH --upsampling --augment --fast_dev_run --evaluate_first --nms_thresh NMS_THRESH --iou_threshold IOU_THRESHOLD --score_thresh SCORE_THRESH --lr LEARNING_RATE]
 
 Options:
     --input_zip ZIP_FILE                 Folder with the dataset in format of Deepforest.
@@ -12,6 +12,7 @@ Options:
     --upsampling                         Make upsampling
     --augment                            Apply transformations
     --fast_dev_run                       fast_dev_run
+    --evaluate_first                     evaluate_first
     --nms_thresh NMS_THRESH              Nms_thresh [default: 0.05]
     --iou_threshold IOU_THRESHOLD        iou_threshold [default: 0.4]
     --score_thresh SCORE_THRESH          score_thresh [default: 0.1]
@@ -126,7 +127,8 @@ class Training:
 
     def train(self, epochs: int=10, batch_size: int=8, accelerator: str='auto', upsampling=False,
               nms_thresh=0.05, iou_threshold=0.4, score_thresh=0.1,
-              learning_rate=0.01, augment=False, fast_dev_run=False, **kwargs): 
+              learning_rate=0.01, augment=False, fast_dev_run=False,
+              evaluate_first=True, **kwargs): 
         
         if upsampling:
             self.upsampling()
@@ -148,10 +150,11 @@ class Training:
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = False
         self.model.config["train"]["fast_dev_run"] = True
-
-        self.evaluate(file_pr='results_pr_pretrained.json',
-                     file_torchmetrics='results_torchmetrics_pretrained.json',
-                     iou_threshold=iou_threshold)
+        
+        if evaluate_first:
+            self.evaluate(file_pr='results_pr_pretrained.json',
+                         file_torchmetrics='results_torchmetrics_pretrained.json',
+                         iou_threshold=iou_threshold)
 
         # self.model.trainer =  Trainer(
         #                               accelerator=self.model.config["accelerator"],
@@ -217,6 +220,7 @@ def main():
     upsampling = args['--upsampling']
     fast_dev_run = args['--fast_dev_run']
     augment = args['--augment']
+    evaluate_first = args['--evaluate_first']
     nms_thresh = float(args['--nms_thresh'])
     iou_threshold = float(args['--iou_threshold'])
     score_thresh = float(args['--score_thresh'])
@@ -228,7 +232,8 @@ def main():
                    iou_threshold=iou_threshold, score_thresh=score_thresh,
                    learning_rate=learning_rate, 
                    augment=augment,
-                   fast_dev_run=fast_dev_run)
+                   fast_dev_run=fast_dev_run,
+                   evaluate_first=evaluate_first)
     training.save()
     training.evaluate(iou_threshold=iou_threshold)
 
