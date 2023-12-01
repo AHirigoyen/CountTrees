@@ -9,7 +9,7 @@ def get_transform(augment):
             #     A.RandomCrop(width=300, height=300, p=0.3),
             #     A.RandomCrop(width=100, height=100, p=0.3),
             # ], p=1),
-            A.ShiftScaleRotate(p=0.5),
+            #A.ShiftScaleRotate(p=0.5),
             A.HorizontalFlip(p=0.5),
             A.RandomRotate90(p=0.5),
             A.RandomBrightnessContrast(p=0.6),
