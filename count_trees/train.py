@@ -154,7 +154,7 @@ class Training:
 
         self.model.config["save-snapshot"] = False
         self.model.config["train"]["preload_images"] = False
-        self.model.config["train"]["fast_dev_run"] = True
+        self.model.config["train"]["fast_dev_run"] = fast_dev_run
         
         if evaluate_first:
             self.evaluate(file_pr='results_pr_pretrained.json',
