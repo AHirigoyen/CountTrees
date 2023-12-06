@@ -83,7 +83,7 @@ def main():
         df = shapefile_to_annotations(
             shapefile=output_shapefile,
             rgb=output_raster,
-            convert_to_boxes=False, 
+            geometry_type="bbox",
             buffer_size=0.15
         )
                 
