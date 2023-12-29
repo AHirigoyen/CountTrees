@@ -6,6 +6,9 @@ import geopandas as gp
 import rasterio
 import os
 import shapely
+from rasterio import features
+import numpy as np
+from shapely.geometry import shape
 
 def shapefile_to_annotations(shapefile, rgb, savedir="."):
     """
@@ -62,8 +65,9 @@ def shapefile_to_annotations(shapefile, rgb, savedir="."):
     result = result[~(result.ymin == result.ymax)]
     
     #write file
-    result.to_csv(csv_filename,index=False)
+    result.to_csv(csv_filename, index=False)
     
+
 def project(raster_path, boxes):
     """
     Convert image coordinates into a geospatial object to overlap with input image. 
@@ -73,12 +77,26 @@ def project(raster_path, boxes):
     Returns:
         a geopandas dataframe with predictions in input projection.
     """
+
+    geometries = []
     with rasterio.open(raster_path) as dataset:
         bounds = dataset.bounds
-        pixelSizeX, pixelSizeY  = dataset.res
+        pixelSizeX, pixelSizeY = dataset.res
+        image = dataset.read(1)
+        nodata = dataset.nodata
+        crs = dataset.crs
+        is_valid = (image != nodata).astype(np.uint8)
+        for coords, value in features.shapes(is_valid, transform=dataset.transform):
+            if value != 0:
+                geom = shape(coords)
+                geometries.append(geom)
+
+        # Create a GeoDataFrame
+        gdf_shapes = gp.GeoDataFrame(geometry=geometries)
+        gdf_shapes.crs = crs
 
     #subtract origin. Recall that numpy origin is top left! Not bottom left.
-    boxes["xmin"] = (boxes["xmin"] *pixelSizeX) + bounds.left
+    boxes["xmin"] = (boxes["xmin"] * pixelSizeX) + bounds.left
     boxes["xmax"] = (boxes["xmax"] * pixelSizeX) + bounds.left
     boxes["ymin"] = bounds.top - (boxes["ymin"] * pixelSizeY) 
     boxes["ymax"] = bounds.top - (boxes["ymax"] * pixelSizeY)
@@ -88,7 +106,13 @@ def project(raster_path, boxes):
     boxes = gp.GeoDataFrame(boxes, geometry='geometry')
     
     boxes.crs = dataset.crs.to_wkt()
-    
+
+    # Perform a spatial join to find intersections
+    intersections = gp.sjoin(boxes, gdf_shapes, how="inner", op="intersects")
+
+    # Drop duplicates because the same box might intersect with multiple shapes
+    intersections = intersections.drop_duplicates(subset=boxes.index.name)
+
     #Shapefiles could be written with geopandas boxes.to_file(<filename>, driver='ESRI Shapefile')
     
-    return boxes
+    return intersections

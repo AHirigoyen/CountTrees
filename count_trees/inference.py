@@ -71,7 +71,7 @@ class Inference:
         else:
             current_device = torch.device("cpu")
         model = main_model.deepforest()
-        model.model.load_state_dict(torch.load(path_model,map_location=current_device))
+        model.model.load_state_dict(torch.load(path_model, map_location=current_device))
         model.to("cuda")
         return model 
 
@@ -90,7 +90,7 @@ def main():
     out_dirname = args['<outdir>']
     patch_size = int(args['--patch_size'])
     inference = Inference(path_model, out_dirname)
-    inference(path_img,patch_size=patch_size)
+    inference(path_img, patch_size=patch_size)
     inference.plot_prediction()
 
 

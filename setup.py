@@ -23,6 +23,8 @@ setup(
                     'GDAL',
                     'tqdm',
                     'geopandas',
+                    'rasterio',
+                    'shapely',
     ],
 
     entry_points={'console_scripts': [
